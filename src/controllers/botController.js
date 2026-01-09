@@ -22,6 +22,9 @@ function safeAttachments(message) {
   }));
 }
 
+const MAX_LIST_ROWS = 10;
+const PAGE_SIZE = 9;
+
 function meta(session, formCode, currentQid, currentBlockId) {
   return { sessionStatus: session.status, currentQid: currentQid || session.currentQid || null, currentBlockId: currentBlockId || session.currentBlockId || null, formCode, wa_id: session.wa_id };
 }
@@ -38,7 +41,7 @@ function isGreeting(text) {
 
 function extractDiagnosis(text) {
   const t = (text || "").toLowerCase();
-  const m = t.match(/cancer\s+de\s+([a-záéíóúñü\s]+)/i);
+  const m = t.match(/cancer\s+de\s+([a-z\s]+)/i);
   if (m) return `cancer de ${m[1].trim()}`;
   if (t.includes("cancer")) return "cancer (sin especificar)";
   return null;
@@ -54,6 +57,48 @@ function extractSetFormCode(text) {
 
 function casualInviteText() {
   return `Cuando quieras avanzar con el formulario, dime "formulario" y te pregunto si prefieres web o WhatsApp. Sin apuro.`;
+}
+
+function isChoiceQuestion(question) {
+  return ["dropdown", "single_choice", "select_one"].includes(question?.type);
+}
+
+function getOptionPages(session) {
+  return (session.notes && session.notes.optionPages) || {};
+}
+
+async function setOptionPage(session, qid, page) {
+  const pages = { ...getOptionPages(session), [qid]: page };
+  session.notes = { ...(session.notes || {}), optionPages: pages };
+  session.updatedAt = new Date();
+  await session.save();
+}
+
+function buildPagedQuestion(question, session) {
+  if (!question || !isChoiceQuestion(question)) return question;
+  const options = question.options || [];
+  if (options.length <= MAX_LIST_ROWS) return question;
+
+  const pages = getOptionPages(session);
+  let page = Number(pages[question.qid] || 0);
+  const maxPage = Math.floor((options.length - 1) / PAGE_SIZE);
+  if (page < 0 || page > maxPage) page = 0;
+
+  const start = page * PAGE_SIZE;
+  const slice = options.slice(start, start + PAGE_SIZE);
+  const hasMore = start + PAGE_SIZE < options.length;
+  const pagedOptions = hasMore
+    ? [...slice, { label: "Ver mas", value: `MORE:${question.qid}:${page + 1}` }]
+    : slice;
+
+  return { ...question, options: pagedOptions };
+}
+
+function parseMoreToken(text) {
+  if (!text) return null;
+  const m = String(text).match(/^MORE:([^:]+):(\d+)$/);
+  if (!m) return null;
+  return { qid: m[1], page: Number(m[2]) };
 }
 
 async function getPatientProfileSummary(wa_id) {
@@ -221,9 +266,10 @@ console.log("Received bot message");
     session.status = "IN_PROGRESS";
     await session.save();
     const { question, block } = resolveCurrentQuestion(form, session);
-    const out = question ? renderQuestion(question) : { text: "No hay preguntas pendientes.", buttons: [] };
+    const paged = buildPagedQuestion(question, session);
+    const out = paged ? renderQuestion(paged) : { text: "No hay preguntas pendientes.", buttons: [] };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
-    return res.json({ reply: { ...out, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, paged?.qid, block?.id) }, actions: [] });
   }
   if (command === "STATUS") {
     const { question, block } = resolveCurrentQuestion(form, session);
@@ -249,9 +295,10 @@ console.log("Received bot message");
     session.status = "IN_PROGRESS";
     await session.save();
     const { question, block } = resolveCurrentQuestion(form, session);
-    const out = question ? renderQuestion(question) : { text: "No hay preguntas pendientes.", buttons: [] };
+    const paged = buildPagedQuestion(question, session);
+    const out = paged ? renderQuestion(paged) : { text: "No hay preguntas pendientes.", buttons: [] };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
-    return res.json({ reply: { ...out, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, paged?.qid, block?.id) }, actions: [] });
   }
   if (command === "REQUEST_REVIEW") {
     session.status = "PENDING_REVIEW";
@@ -307,13 +354,14 @@ console.log("Received bot message");
         ({ question, block } = resolveCurrentQuestion(form, session));
       }
       const intro = block ? renderBlockIntro(block) : null;
-      const out = question ? renderQuestion(question) : {
+      const paged = buildPagedQuestion(question, session);
+      const out = paged ? renderQuestion(paged) : {
         text: "No hay preguntas configuradas. Si prefieres, usa el formulario web o reinicia con 'reiniciar'.",
         buttons: [{ label: "Formulario web", value: "FORM_WEB" }]
       };
       const mergedText = intro ? `${intro.text}\n\n${out.text}` : out.text;
       await appendMemory(memory, { direction: "OUT", type: "text", text: mergedText, agent: decideAgent({ session, question }) });
-      return res.json({ reply: { ...out, text: mergedText, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+      return res.json({ reply: { ...out, text: mergedText, meta: meta(session, formCode, paged?.qid, block?.id) }, actions: [] });
     }
     if (consentNo) {
       session.status = "CANCELLED";
@@ -420,6 +468,14 @@ console.log("Received bot message");
 
   // Current question
   const { question, block } = resolveCurrentQuestion(form, session);
+  const more = parseMoreToken(msg.text);
+  if (more && question && more.qid === question.qid && isChoiceQuestion(question)) {
+    await setOptionPage(session, question.qid, more.page);
+    const paged = buildPagedQuestion(question, session);
+    const out = paged ? renderQuestion(paged) : { text: "No hay preguntas pendientes.", buttons: [] };
+    await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+  }
   if (!question) {
     session.status = "COMPLETED";
     await session.save();
@@ -471,7 +527,8 @@ console.log("Received bot message");
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
       return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
     }
-    const out = renderValidationError(question, validated.error);
+    const paged = buildPagedQuestion(question, session);
+    const out = renderValidationError(paged, validated.error);
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
     logger.info({ msg: "VALIDATION_FAIL", wa_id, qid: question.qid, error: validated.error });
     return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
@@ -513,6 +570,11 @@ console.log("Received bot message");
     await saveAnswer(session, { qid: question.qid, value: validated.value, label: validated.label, raw: validated.raw });
   } else {
     await saveAnswer(session, { qid: question.qid, value: null, label: null, raw: null });
+  }
+  if (session.notes?.optionPages && session.notes.optionPages[question.qid] !== undefined) {
+    const pages = { ...session.notes.optionPages };
+    delete pages[question.qid];
+    session.notes = { ...(session.notes || {}), optionPages: pages };
   }
 
   session.currentQid = undefined;
@@ -561,7 +623,8 @@ console.log("Received bot message");
     return res.json({ reply: { ...out, text: finalText, buttons, meta: meta(session, formCode) }, actions });
   }
 
-  const rendered = renderQuestion(next);
+  const pagedNext = buildPagedQuestion(next, session);
+  const rendered = renderQuestion(pagedNext);
   const combinedText = [...texts, rendered.text].filter(Boolean).join("\n\n");
   logger.info({ msg: "ASK_NEXT", wa_id, nextQid: next.qid, nextBlock: nextBlock?.id, actionsCount: actions.length });
   await appendMemory(memory, { direction: "OUT", type: "text", text: combinedText, agent: decideAgent({ session, question: next }) });
