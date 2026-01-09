@@ -9,7 +9,7 @@ import { evaluateAnswerRisk } from "../services/aiService.js";
 import { generateLLMAnswer } from "../services/llmService.js";
 import { transcribeAudioAttachment } from "../services/audioService.js";
 import { logger } from "../utils/logger.js";
-import { sendFinalizePayload } from "../services/webhookService.js";
+import { sendFinalizePayload, sendFilterPayload } from "../services/webhookService.js";
 import { FormSession } from "../models/FormSession.js";
 import { FormMemory } from "../models/FormMemory.js";
 
@@ -128,6 +128,101 @@ function buildAnswersSnapshot(session, form, max = 6) {
   return lines.join(" | ");
 }
 
+function normalizeTextValue(value) {
+  if (value == null) return null;
+  if (typeof value === "number") return String(value);
+  if (typeof value === "boolean") return value ? "1" : "0";
+  const raw = String(value).trim().toLowerCase();
+  if (["si", "sí", "true"].includes(raw)) return "1";
+  if (["no", "false"].includes(raw)) return "0";
+  return raw;
+}
+
+function slugify(value) {
+  if (value == null) return null;
+  const raw = String(value).trim().toLowerCase();
+  return raw
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function toAnswerShape(value, blockName) {
+  const answered = value != null && String(value).trim() !== "";
+  return {
+    value,
+    isValid: answered,
+    isAnswered: answered,
+    isPending: false,
+    validationErr: null,
+    isCorrectIncorrectScreenDisplayed: false,
+    isLocked: false,
+    blockName: blockName || "dropdown",
+  };
+}
+
+function getAnswerByQid(session, qid) {
+  const a = (session.answers || []).find((x) => x.qid === qid);
+  return a ? (a.label ?? a.value) : null;
+}
+
+function formatDateForFilter(value) {
+  if (!value) return null;
+  const raw = String(value).trim();
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return raw;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
+function buildFilterPayload(session, form) {
+  const enfermedad = slugify(getAnswerByQid(session, "q1"));
+  const metastasis = normalizeTextValue(getAnswerByQid(session, "q7"));
+  const cirugiaRaw = normalizeTextValue(getAnswerByQid(session, "q9"));
+  const cirugia = cirugiaRaw === "1" ? "1" : (cirugiaRaw === "0" ? "0" : "1");
+  const tratamiento = getAnswerByQid(session, "q12") ? "1" : "0";
+  const sexo = slugify(getAnswerByQid(session, "q16"));
+  const region = slugify(getAnswerByQid(session, "q18"));
+  const dolor = normalizeTextValue(getAnswerByQid(session, "q14"));
+  const descanso = normalizeTextValue(getAnswerByQid(session, "q14_2"));
+  const actividad = normalizeTextValue(getAnswerByQid(session, "q15"));
+  const nombre = getAnswerByQid(session, "q19");
+  const email = getAnswerByQid(session, "q20");
+  const telefono = getAnswerByQid(session, "q21");
+  const fechaCirugia = formatDateForFilter(getAnswerByQid(session, "q10"));
+  const detallesCirugia = getAnswerByQid(session, "q11");
+
+  return {
+    answers: {
+      enfermedad: toAnswerShape(enfermedad, "dropdown"),
+      metastasis: toAnswerShape(metastasis, "dropdown"),
+      cirugia: toAnswerShape(cirugia, "dropdown"),
+      tratamiento: toAnswerShape(tratamiento, "dropdown"),
+      guiasSeleccionadas: toAnswerShape(
+        [process.env.FILTER_DEFAULT_GUIDE || "info-general"],
+        "multiple-choice"
+      ),
+      terminos: toAnswerShape("si-acepto", "dropdown"),
+      sexoDelPaciente: toAnswerShape(sexo, "dropdown"),
+      paisDelPaciente: toAnswerShape(process.env.FILTER_DEFAULT_COUNTRY || "chile", "dropdown"),
+      regionDelPaciente: toAnswerShape(region, "dropdown"),
+      ciudadDelPaciente: toAnswerShape(null, "short-text"),
+      dolorSintomas: toAnswerShape(dolor, "dropdown"),
+      descansoEnCama: toAnswerShape(descanso, "dropdown"),
+      actividadDiaria: toAnswerShape(actividad, "dropdown"),
+      nombre: { value: nombre, isValid: !!nombre, validationErr: null },
+      email: { value: email, isValid: !!email, validationErr: null },
+      telefono: { value: telefono, isValid: !!telefono, validationErr: null },
+      tipoDeCancerPulmon: toAnswerShape(null, "dropdown"),
+      fechaCirugia: toAnswerShape(fechaCirugia, "date"),
+      detallesCirugia: toAnswerShape(detallesCirugia, "long-text"),
+      subtipo: { value: null },
+      user: { id: null, nombre: null, email: null, telefono: null },
+      origenFormulario: { value: "guias" },
+      nombreFormulario: "filter",
+    },
+  };
+}
+
 async function getRecentConversation(wa_id, formCode, limit = 6) {
   const mem = await FormMemory.findOne({ wa_id, formCode }).lean();
   const events = mem?.events || [];
@@ -242,7 +337,7 @@ console.log("Received bot message");
   if (setFormCode) {
     const nextForm = await getActiveFormByCode(setFormCode);
     if (!nextForm) {
-      const out = { text: `No encontré formulario con code=${setFormCode}. Escribe "formularios" para ver la lista.`, buttons: [] };
+      const out = { text: `No encontr® formulario con code=${setFormCode}. Escribe "formularios" para ver la lista.`, buttons: [] };
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
       return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
     }
@@ -255,7 +350,7 @@ console.log("Received bot message");
   if (command === "FORM_WEB") {
     const url = process.env.FORM_WEB_URL || "https://example.com/form";
     const out = {
-      text: `Aquí tienes el formulario web: ${url}\n\nSi prefieres, puedo ayudarte a completarlo por chat. Solo di "formulario" o "empezar por chat".`,
+      text: `Aqu¡ tienes el formulario web: ${url}\n\nSi prefieres, puedo ayudarte a completarlo por chat. Solo di "formulario" o "empezar por chat".`,
       buttons: [{ label: "Completar por chat", value: "START_FORM" }]
     };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
@@ -350,7 +445,7 @@ console.log("Received bot message");
   }
   if (command === "DELETE_DATA") {
     const purgeDate = await requestDeletion(wa_id, formCode);
-    const out = { text: `He recibido tu solicitud de borrar tus datos. Haré un borrado suave y en 15 días se purgarán por completo (fecha estimada: ${purgeDate.toISOString().slice(0,10)}). Mientras tanto, no se usarán para nuevas interacciones.`, buttons: [] };
+    const out = { text: `He recibido tu solicitud de borrar tus datos. Har® un borrado suave y en 15 d¡as se purgarín por completo (fecha estimada: ${purgeDate.toISOString().slice(0,10)}). Mientras tanto, no se usarín para nuevas interacciones.`, buttons: [] };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
     return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
   }
@@ -442,10 +537,10 @@ console.log("Received bot message");
         }
       }
       if (!answerText) {
-        answerText = greet ? `Hola${session.name ? " " + session.name : ""}, ¿en qué puedo ayudarte?` : "¿En qué puedo ayudarte hoy?";
+        answerText = greet ? `Hola${session.name ? " " + session.name : ""}, en qu® puedo ayudarte?` : "En qu® puedo ayudarte hoy?";
       }
       const url = process.env.FORM_WEB_URL || "https://example.com/form";
-      const cta = `Si quieres, puedo abrir el formulario: te paso el link web (${url}) o lo completamos aquí paso a paso.`;
+      const cta = `Si quieres, puedo abrir el formulario: te paso el link web (${url}) o lo completamos aqu¡ paso a paso.`;
       const text = [answerText, cta].join("\n\n");
       const buttons = [
         { label: "Web", value: "FORM_WEB" },
@@ -527,7 +622,9 @@ console.log("Received bot message");
       meta: { completedAt: new Date().toISOString() }
     };
     await sendFinalizePayload(payload);
-    const finalText = [out.text, "¿Qué prefieres ahora?"].filter(Boolean).join("\n\n");
+    const filterPayload = buildFilterPayload(session, form);
+    await sendFilterPayload(filterPayload);
+    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join(\"\n\n\");
     const buttons = [
       { label: "Nuevo formulario", value: "START_FORM" },
       { label: "Chatear", value: "CHAT" },
@@ -649,7 +746,9 @@ console.log("Received bot message");
       meta: { completedAt: new Date().toISOString() }
     };
     await sendFinalizePayload(payload);
-    const finalText = [out.text, "¿Qué prefieres ahora?"].filter(Boolean).join("\n\n");
+    const filterPayload = buildFilterPayload(session, form);
+    await sendFilterPayload(filterPayload);
+    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join(\"\n\n\");
     const buttons = [
       { label: "Nuevo formulario", value: "START_FORM" },
       { label: "Chatear", value: "CHAT" },

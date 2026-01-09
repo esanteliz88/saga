@@ -1,6 +1,7 @@
 import { logger } from "../utils/logger.js";
 
 const endpoint = process.env.FINALIZE_ENDPOINT || "https://n8n.guiaysalud.com/webhook/data-filter";
+const filterEndpoint = process.env.FILTER_API_ENDPOINT || "https://apifiltro.guiaysalud.com/api/v1/filter-ec/filter";
 const apiKey = process.env.FINALIZE_API_KEY || process.env.API_KEY || "";
 
 export async function sendFinalizePayload(payload) {
@@ -23,6 +24,30 @@ export async function sendFinalizePayload(payload) {
     return { ok: true, data };
   } catch (err) {
     logger.error({ msg: "FINALIZE_WEBHOOK_ERROR", err: err?.message });
+    return { ok: false, error: err?.message };
+  }
+}
+
+export async function sendFilterPayload(payload) {
+  try {
+    const resp = await fetch(filterEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { "x-api-key": apiKey } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      logger.error({ msg: "FILTER_API_FAILED", status: resp.status, text });
+      return { ok: false, status: resp.status, text };
+    }
+    const data = await resp.json().catch(() => ({}));
+    logger.info({ msg: "FILTER_API_OK", status: resp.status });
+    return { ok: true, data };
+  } catch (err) {
+    logger.error({ msg: "FILTER_API_ERROR", err: err?.message });
     return { ok: false, error: err?.message };
   }
 }
