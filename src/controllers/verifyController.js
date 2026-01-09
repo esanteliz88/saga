@@ -33,10 +33,18 @@ export async function verifyMessage(req, res) {
         // Build internal payload expected by handleBotMessage
         const text = GetTextUser(msg) || (msg.text && msg.text.body) || "";
         const attachments = [];
-        if (msg.image && (msg.image.link || msg.image.url)) attachments.push({ url: msg.image.link || msg.image.url });
-        if (msg.document && (msg.document.link || msg.document.url)) attachments.push({ url: msg.document.link || msg.document.url, filename: msg.document.filename });
-        if (msg.video && (msg.video.link || msg.video.url)) attachments.push({ url: msg.video.link || msg.video.url });
-        if (msg.audio && (msg.audio.link || msg.audio.url)) attachments.push({ url: msg.audio.link || msg.audio.url });
+        if (msg.image && (msg.image.link || msg.image.url)) {
+            attachments.push({ url: msg.image.link || msg.image.url, kind: "image", id: msg.image.id, mime: msg.image.mime_type });
+        }
+        if (msg.document && (msg.document.link || msg.document.url)) {
+            attachments.push({ url: msg.document.link || msg.document.url, filename: msg.document.filename, kind: "document", id: msg.document.id, mime: msg.document.mime_type });
+        }
+        if (msg.video && (msg.video.link || msg.video.url)) {
+            attachments.push({ url: msg.video.link || msg.video.url, kind: "video", id: msg.video.id, mime: msg.video.mime_type });
+        }
+        if (msg.audio && (msg.audio.link || msg.audio.url || msg.audio.id)) {
+            attachments.push({ url: msg.audio.link || msg.audio.url, kind: "audio", id: msg.audio.id, mime: msg.audio.mime_type });
+        }
 
         const transformed = {
             channel: "whatsapp",

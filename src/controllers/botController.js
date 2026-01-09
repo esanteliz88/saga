@@ -7,6 +7,7 @@ import { decideAgent, buildExternalAction } from "../services/orchestratorServic
 import { validateEvidence } from "../services/evidenceValidator.js";
 import { evaluateAnswerRisk } from "../services/aiService.js";
 import { generateLLMAnswer } from "../services/llmService.js";
+import { transcribeAudioAttachment } from "../services/audioService.js";
 import { logger } from "../utils/logger.js";
 import { sendFinalizePayload } from "../services/webhookService.js";
 import { FormSession } from "../models/FormSession.js";
@@ -14,8 +15,10 @@ import { FormMemory } from "../models/FormMemory.js";
 
 function safeAttachments(message) {
   const arr = message?.attachments || [];
-  return arr.filter((a) => a && a.url).map((a) => ({
-    url: String(a.url),
+  return arr.filter((a) => a && (a.url || a.id)).map((a) => ({
+    url: a.url ? String(a.url) : undefined,
+    kind: a.kind ? String(a.kind) : undefined,
+    id: a.id ? String(a.id) : undefined,
     mime: a.mime ? String(a.mime) : undefined,
     filename: a.filename ? String(a.filename) : undefined,
     size: typeof a.size === "number" ? a.size : undefined
@@ -468,6 +471,23 @@ console.log("Received bot message");
 
   // Current question
   const { question, block } = resolveCurrentQuestion(form, session);
+  const audioAtt = atts.find((a) => a.kind === "audio");
+  if (!msg.text && audioAtt && question) {
+    const tx = await transcribeAudioAttachment(audioAtt);
+    if (tx.ok && tx.text) {
+      msg.text = tx.text;
+      logger.info({ msg: "AUDIO_TRANSCRIBED", wa_id, qid: question.qid, textLen: tx.text.length });
+    } else {
+      const out = { text: "No pude procesar el audio. Por favor responde con texto o botones.", buttons: [] };
+      await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
+      return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+    }
+  }
+  if (!msg.text && atts.length > 0 && question && !question.meta?.requiresEvidence) {
+    const out = { text: "Recibi un archivo, pero necesito tu respuesta en texto o con botones para continuar.", buttons: [] };
+    await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+  }
   const more = parseMoreToken(msg.text);
   if (more && question && more.qid === question.qid && isChoiceQuestion(question)) {
     await setOptionPage(session, question.qid, more.page);
