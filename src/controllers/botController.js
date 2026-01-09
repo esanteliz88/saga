@@ -115,6 +115,19 @@ async function getPatientProfileSummary(wa_id) {
   return profileParts.join(" | ");
 }
 
+function buildAnswersSnapshot(session, form, max = 6) {
+  const answers = (session.answers || []).slice(-max);
+  if (!answers.length) return null;
+  const byQid = new Map();
+  for (const q of form.questions || []) byQid.set(q.qid, q.label);
+  const lines = answers.map((a) => {
+    const label = byQid.get(a.qid) || a.qid;
+    const val = a.label ?? a.value;
+    return `${label}: ${val ?? "N/D"}`;
+  });
+  return lines.join(" | ");
+}
+
 async function getRecentConversation(wa_id, formCode, limit = 6) {
   const mem = await FormMemory.findOne({ wa_id, formCode }).lean();
   const events = mem?.events || [];
@@ -377,6 +390,7 @@ console.log("Received bot message");
     // Chat libre sin consentimiento cuando chatFree=true
     if (session.notes?.chatFree && !isFormIntent(msg.text) && !consentYes) {
       const profile = await getPatientProfileSummary(wa_id);
+      const answersSnapshot = buildAnswersSnapshot(session, form);
       const convo = await getRecentConversation(wa_id, formCode, 6);
       const ai = await generateLLMAnswer({
         prompt: msg.text,
@@ -384,6 +398,7 @@ console.log("Received bot message");
           "Eres un asistente de salud empatico y claro. Responde breve, sin diagnosticar ni dar tratamientos. " +
           "Solo brinda orientacion y responde preguntas de medicina general." +
           (session.notes?.diagnosis ? `\nEl usuario menciono previamente: ${session.notes.diagnosis}.` : "") +
+          (answersSnapshot ? `\nRespuestas actuales: ${answersSnapshot}` : "") +
           (profile ? `\nContexto previo: ${profile}` : "") +
           (convo ? `\nHistorial reciente:\n${convo}` : ""),
       });
@@ -399,6 +414,7 @@ console.log("Received bot message");
       const greet = isGreeting(msg.text);
       let answerText = null;
       const profile = await getPatientProfileSummary(wa_id);
+      const answersSnapshot = buildAnswersSnapshot(session, form);
       const convo = await getRecentConversation(wa_id, formCode, 6);
       if (msg.text && msg.text.trim().length > 0) {
         const ai = await generateLLMAnswer({
@@ -407,6 +423,7 @@ console.log("Received bot message");
             "Eres un asistente de salud empatico y claro. Responde breve, sin diagnosticar ni dar tratamientos. " +
             "Solo brinda orientacion y responde preguntas de medicina general. No ofrezcas formularios a menos que te lo pidan." +
             (session.notes?.diagnosis ? `\nEl usuario menciono previamente: ${session.notes.diagnosis}.` : "") +
+            (answersSnapshot ? `\nRespuestas actuales: ${answersSnapshot}` : "") +
             (profile ? `\nContexto previo: ${profile}` : "") +
             (convo ? `\nHistorial reciente:\n${convo}` : ""),
         });
