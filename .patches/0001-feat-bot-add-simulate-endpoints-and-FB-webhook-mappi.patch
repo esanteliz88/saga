@@ -1,0 +1,982 @@
+From 7ec4cf5a8bc5c8d6b6998eb1d9dd13db0f0b606b Mon Sep 17 00:00:00 2001
+From: Elvis Santeliz <santelizelvis@gmail.com>
+Date: Fri, 9 Jan 2026 15:21:25 -0300
+Subject: [PATCH] feat(bot): add simulate endpoints and FB webhook mapping;
+ allow WS without api key
+
+---
+ Saga - Bot.postman_collection.json  | 763 ++++++++++++++++++++++++++++
+ src/controllers/verifyController.js |  56 +-
+ src/routes/botRoutes.js             | 115 ++++-
+ 3 files changed, 926 insertions(+), 8 deletions(-)
+ create mode 100644 Saga - Bot.postman_collection.json
+
+diff --git a/Saga - Bot.postman_collection.json b/Saga - Bot.postman_collection.json
+new file mode 100644
+index 0000000..a16825a
+--- /dev/null
++++ b/Saga - Bot.postman_collection.json	
+@@ -0,0 +1,763 @@
++{
++	"info": {
++		"_postman_id": "8f003b4f-3eac-4a42-a8df-31a17fcfea80",
++		"name": "Saga - Bot",
++		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
++		"_exporter_id": "25904543",
++		"_collection_link": "https://interstellar-shadow-271327.postman.co/workspace/Team-Workspace~8eaf8923-eb4c-45dd-8043-7d7d0e491214/collection/25904543-8f003b4f-3eac-4a42-a8df-31a17fcfea80?action=share&source=collection_link&creator=25904543"
++	},
++	"item": [
++		{
++			"name": "Mensaje plantilla",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"to\": \"56957600539\",\n    \"type\": \"template\",\n    \"template\": {\n        \"name\": \"hello_world\",\n        \"language\": {\n            \"code\": \"en_US\"\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Texto",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",    \n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"text\",\n    \"text\": {\n        \"preview_url\": false,\n        \"body\": \"Desde whatsapp de Saga Bot\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Texto Dif. Formatos",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",    \n    \"recipient_type\": \"individual\",\n    \"to\": \"56932281981\",\n    \"type\": \"text\",\n    \"text\": {\n        \"preview_url\": false,\n        \"body\": \"*Texto en negritas* - _Texto en Cursiva_ - ~Texto tachado~ - \"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Preview URL",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"to\": \"56932281981\",\n    \"text\": {\n        \"preview_url\": true,\n        \"body\": \"Please visit https://www.youtube.com/watch?v=GpefTFZLknk&list=RDGpefTFZLknk&start_radio=1 to inspire your day!\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Imagen",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"image\",\n    \"image\": {\n        \"link\": \"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Imagen prueba",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"image\",\n    \"image\": {\n        \"link\": \"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Audio",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"audio\",\n    \"audio\": {\n        \"link\": \"https://drive.google.com/file/d/1DOIbAHJWo_99L4TEfF0KNV_3XlLhRUNN/view?usp=drive_link\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Documento",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"document\",\n    \"document\": {\n        \"link\": \"https://cs210032000b7b5ed89.blob.core.windows.net/guias/6702e717434d0425a9cd3210/cancer-pulmon-info-general-2024-10-06.pdf\",\n        \"caption\":\"Documento de prueba\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Video",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"video\",\n    \"video\": {\n        \"link\": \"https://cs210032000b7b5ed89.blob.core.windows.net/guias/6702e717434d0425a9cd3210/cancer-pulmon-info-general-2024-10-06.pdf\",\n        \"caption\":\"Video de priueba\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Ubicación",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"location\",\n    \"location\": {\n        \"latitude\": \"-33.41464880339573\",\n        \"longitude\": \"-70.6155954952158\",\n        \"name\": \"Oficina Elvis\",\n        \"address\": \"El Biscochito\"\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Botones",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Lista opciones",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"56957600539\", \n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"Encabezado (Opcional)\"\n    },\n    \"body\": {\n      \"text\": \"Este es el cuerpo del mensaje. Por favor selecciona una opción de la lista.\"\n    },\n    \"footer\": {\n      \"text\": \"Pie de página (Opcional)\"\n    },\n    \"action\": {\n      \"button\": \"Ver Opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Sección 1 (Ej. Cursos)\",\n          \"rows\": [\n            {\n              \"id\": \"curso_01\",\n              \"title\": \"Piloto Privado\",\n              \"description\": \"Curso inicial para volar\"\n            },\n            {\n              \"id\": \"curso_02\",\n              \"title\": \"Piloto Comercial\",\n              \"description\": \"Carrera profesional\"\n            }\n          ]\n        },\n        {\n          \"title\": \"Sección 2 (Ej. Contacto)\",\n          \"rows\": [\n            {\n              \"id\": \"contact_support\",\n              \"title\": \"Hablar con soporte\",\n              \"description\": \"Atención humana\"\n            }\n          ]\n        }\n      ]\n    }\n  }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Botones Título",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"text\",\n            \"text\":\"Título de la pregunta\"\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Botones Imagen",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"image\",\n            \"image\":{\n                \"link\":\"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Botones Documento",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"document\",\n            \"document\":{\n                \"link\":\"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\",\n                \"filename\":\"Nombre documento\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		},
++		{
++			"name": "Botones Video",
++			"request": {
++				"auth": {
++					"type": "bearer",
++					"bearer": [
++						{
++							"key": "token",
++							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
++							"type": "string"
++						}
++					]
++				},
++				"method": "POST",
++				"header": [
++					{
++						"key": "Content-Type",
++						"value": "application/json",
++						"type": "text"
++					}
++				],
++				"body": {
++					"mode": "raw",
++					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"video\",\n            \"video\":{\n                \"link\":\"https://botwhatsappsample.blob.core.windows.net/videos/crash-bandic.mp4\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
++					"options": {
++						"raw": {
++							"language": "json"
++						}
++					}
++				},
++				"url": {
++					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
++					"protocol": "https",
++					"host": [
++						"graph",
++						"facebook",
++						"com"
++					],
++					"path": [
++						"v22.0",
++						"847112945162261",
++						"messages"
++					]
++				}
++			},
++			"response": []
++		}
++	]
++}
+\ No newline at end of file
+diff --git a/src/controllers/verifyController.js b/src/controllers/verifyController.js
+index 4cdb932..971dfe0 100644
+--- a/src/controllers/verifyController.js
++++ b/src/controllers/verifyController.js
+@@ -6,13 +6,57 @@ export function verifyToken(req, res) {
+ }
+ 
+ 
+-export function  verifyMessage (req, res) {
+-    try{
+-        console.log(req.body.entry[0].changes[0].value.messages[0])
+-        res.send("EVENT_RECEIVED");
+-    }catch(e){
++import { handleBotMessage } from "./botController.js";
++
++export function verifyMessage(req, res) {
++    try {
++        const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
++        console.log(msg || req.body);
++
++        if (msg) {
++            // Build internal payload expected by handleBotMessage
++            const text = GetTextUser(msg) || (msg.text && msg.text.body) || "";
++            const attachments = [];
++            if (msg.image && (msg.image.link || msg.image.url)) attachments.push({ url: msg.image.link || msg.image.url });
++            if (msg.document && (msg.document.link || msg.document.url)) attachments.push({ url: msg.document.link || msg.document.url, filename: msg.document.filename });
++            if (msg.video && (msg.video.link || msg.video.url)) attachments.push({ url: msg.video.link || msg.video.url });
++            if (msg.audio && (msg.audio.link || msg.audio.url)) attachments.push({ url: msg.audio.link || msg.audio.url });
++
++            const transformed = {
++                channel: "whatsapp",
++                user: { wa_id: msg.from || msg.from_number || msg.sender || "" },
++                message: {
++                    id: msg.id || msg.message_id,
++                    text,
++                    type: msg.type || (msg.text ? "text" : "unknown"),
++                    attachments
++                },
++                formCode: undefined
++            };
++
++            // Call handleBotMessage asynchronously but respond to Facebook immediately
++            try {
++                const fakeReq = { body: transformed };
++                const dummyRes = { json: () => {}, status: () => ({ json: () => {} }), send: () => {} };
++                setImmediate(() => {
++                    try {
++                        // handleBotMessage is async; call and ignore result
++                        // eslint-disable-next-line no-void
++                        void handleBotMessage(fakeReq, dummyRes);
++                    } catch (e) {
++                        console.error("handleBotMessage error:", e);
++                    }
++                });
++            } catch (e) {
++                console.error("Failed to dispatch to handleBotMessage", e);
++            }
++        }
++
++        // Facebook expects a quick 200 with body EVENT_RECEIVED
++        return res.send("EVENT_RECEIVED");
++    } catch (e) {
+         console.log(e);
+-        res.send("EVENT_RECEIVED");
++        return res.send("EVENT_RECEIVED");
+     }
+ }
+ 
+diff --git a/src/routes/botRoutes.js b/src/routes/botRoutes.js
+index a2c64f5..2e56112 100644
+--- a/src/routes/botRoutes.js
++++ b/src/routes/botRoutes.js
+@@ -1,10 +1,121 @@
+ import { Router } from "express";
+-import { requireApiKey } from "../middlewares/auth.js";
+ import { handleBotMessage } from "../controllers/botController.js";
+ import { verifyToken, verifyMessage } from "../controllers/verifyController.js";
+ 
+ 
+ export const botRouter = Router();
+-botRouter.post("/message", requireApiKey, handleBotMessage);
++botRouter.post("/message", handleBotMessage);
+ botRouter.get("/verify", verifyToken);
+ botRouter.post("/verify", verifyMessage)
++
++// Simulate a WebSocket/WhatsApp incoming message for local testing
++// Accepts payloads similar to what the WS delivers and adapts them
++// to the internal `handleBotMessage` shape.
++botRouter.post("/simulate-ws", (req, res) => {
++	const body = req.body || {};
++
++	// Example incoming WS shape:
++	// {
++	//   from: '56932281981',
++	//   id: 'wamid....',
++	//   timestamp: '1767981459',
++	//   text: { body: 'Hola' },
++	//   type: 'text'
++	// }
++
++	const transformed = {
++		channel: body.channel || "whatsapp",
++		user: {
++			wa_id: body.from || (body.user && body.user.id) || body.wa_id || "",
++			name: (body.user && body.user.name) || body.name || undefined
++		},
++		message: {
++			id: body.id || (body.message && body.message.id) || undefined,
++			text: (body.text && (body.text.body || body.text)) || (body.message && body.message.text) || "",
++			type: body.type || (body.message && body.message.type) || "text",
++			attachments: body.attachments || (body.message && body.message.attachments) || []
++		},
++		// allow optional formCode passthrough for testing
++		formCode: body.formCode
++	};
++
++	req.body = transformed;
++	return handleBotMessage(req, res);
++});
++
++// Simulate incoming Facebook/WhatsApp Graph payloads (Postman collection types)
++botRouter.post("/simulate-fb", (req, res) => {
++	const body = req.body || {};
++
++	// Normalize common shapes from the Postman collection to our internal format
++	const message = { id: undefined, text: "", type: "text", attachments: [] };
++
++	const setText = (t) => {
++		if (typeof t === "string") message.text = t;
++		else if (t && typeof t.body === "string") message.text = t.body;
++	};
++
++	if (body.type === "text" || (body.text && (body.text.body || typeof body.text === "string"))) {
++		setText(body.text || "");
++		message.type = "text";
++	} else if (body.type === "image" || body.image) {
++		message.type = "image";
++		const link = (body.image && (body.image.link || body.image)) || (body.image && body.image.url);
++		if (link) message.attachments.push({ url: link });
++	} else if (body.type === "audio" || body.audio) {
++		message.type = "audio";
++		const link = (body.audio && (body.audio.link || body.audio)) || (body.audio && body.audio.url);
++		if (link) message.attachments.push({ url: link });
++	} else if (body.type === "video" || body.video) {
++		message.type = "video";
++		const link = (body.video && (body.video.link || body.video)) || (body.video && body.video.url);
++		if (link) message.attachments.push({ url: link });
++	} else if (body.type === "document" || body.document) {
++		message.type = "document";
++		const link = (body.document && (body.document.link || body.document)) || (body.document && body.document.url);
++		if (link) message.attachments.push({ url: link, filename: body.document && body.document.filename });
++		if (body.document && body.document.caption) setText({ body: body.document.caption });
++	} else if (body.type === "location" || body.location) {
++		message.type = "location";
++		const loc = body.location || {};
++		message.text = `${loc.name || ""} ${loc.address || ""}`.trim();
++		if (loc.latitude && loc.longitude) message.attachments.push({ url: `geo:${loc.latitude},${loc.longitude}` });
++	} else if (body.type === "interactive" || body.interactive) {
++		const interactive = body.interactive || {};
++		// If this is a simulated incoming reply, Postman may include `interactive.reply` or we can accept a `selectedButtonId` param
++		if (interactive.reply && (interactive.reply.title || interactive.reply.id)) {
++			message.type = "text";
++			message.text = interactive.reply.title || interactive.reply.id;
++		} else if (body.selectedButtonId && interactive.action && Array.isArray(interactive.action.buttons)) {
++			const found = interactive.action.buttons.find((b) => (b.reply && (b.reply.id === body.selectedButtonId || b.reply.title === body.selectedButtonId)) || b.id === body.selectedButtonId);
++			if (found) message.text = (found.reply && (found.reply.title || found.reply.id)) || found.title || found.id;
++		} else if (body.selectedRowId && interactive.action && Array.isArray(interactive.action.sections || [])) {
++			const rows = (interactive.action.sections || []).flatMap((s) => s.rows || []);
++			const found = rows.find((r) => r.id === body.selectedRowId || r.title === body.selectedRowId);
++			if (found) message.text = found.title || found.id;
++		} else if (interactive.type === "button" && interactive.action && Array.isArray(interactive.action.buttons)) {
++			// default to first button title to simulate a press
++			const b = interactive.action.buttons[0];
++			message.text = (b && b.reply && (b.reply.title || b.reply.id)) || (b && b.title) || "";
++		} else if (interactive.type === "list" && interactive.action && Array.isArray(interactive.action.sections || [])) {
++			const rows = (interactive.action.sections || []).flatMap((s) => s.rows || []);
++			const first = rows[0];
++			message.text = first && (first.title || first.id) || "";
++		}
++	}
++
++	const transformed = {
++		channel: "whatsapp",
++		user: { wa_id: body.to || body.to_contact || body.to_phone || body.to_number || body.to || body.recipient || body.to },
++		message: {
++			id: body.id || body.message_id || undefined,
++			text: message.text,
++			type: message.type,
++			attachments: message.attachments
++		},
++		formCode: body.formCode
++	};
++
++	req.body = transformed;
++	return handleBotMessage(req, res);
++});
+-- 
+2.50.0.windows.1
+

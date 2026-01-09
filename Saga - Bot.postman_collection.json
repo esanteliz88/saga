@@ -1,0 +1,763 @@
+{
+	"info": {
+		"_postman_id": "8f003b4f-3eac-4a42-a8df-31a17fcfea80",
+		"name": "Saga - Bot",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25904543",
+		"_collection_link": "https://interstellar-shadow-271327.postman.co/workspace/Team-Workspace~8eaf8923-eb4c-45dd-8043-7d7d0e491214/collection/25904543-8f003b4f-3eac-4a42-a8df-31a17fcfea80?action=share&source=collection_link&creator=25904543"
+	},
+	"item": [
+		{
+			"name": "Mensaje plantilla",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"to\": \"56957600539\",\n    \"type\": \"template\",\n    \"template\": {\n        \"name\": \"hello_world\",\n        \"language\": {\n            \"code\": \"en_US\"\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Texto",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",    \n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"text\",\n    \"text\": {\n        \"preview_url\": false,\n        \"body\": \"Desde whatsapp de Saga Bot\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Texto Dif. Formatos",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",    \n    \"recipient_type\": \"individual\",\n    \"to\": \"56932281981\",\n    \"type\": \"text\",\n    \"text\": {\n        \"preview_url\": false,\n        \"body\": \"*Texto en negritas* - _Texto en Cursiva_ - ~Texto tachado~ - \"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Preview URL",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"to\": \"56932281981\",\n    \"text\": {\n        \"preview_url\": true,\n        \"body\": \"Please visit https://www.youtube.com/watch?v=GpefTFZLknk&list=RDGpefTFZLknk&start_radio=1 to inspire your day!\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Imagen",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"image\",\n    \"image\": {\n        \"link\": \"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Imagen prueba",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"image\",\n    \"image\": {\n        \"link\": \"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Audio",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"audio\",\n    \"audio\": {\n        \"link\": \"https://drive.google.com/file/d/1DOIbAHJWo_99L4TEfF0KNV_3XlLhRUNN/view?usp=drive_link\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Documento",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"document\",\n    \"document\": {\n        \"link\": \"https://cs210032000b7b5ed89.blob.core.windows.net/guias/6702e717434d0425a9cd3210/cancer-pulmon-info-general-2024-10-06.pdf\",\n        \"caption\":\"Documento de prueba\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Video",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"video\",\n    \"video\": {\n        \"link\": \"https://cs210032000b7b5ed89.blob.core.windows.net/guias/6702e717434d0425a9cd3210/cancer-pulmon-info-general-2024-10-06.pdf\",\n        \"caption\":\"Video de priueba\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Ubicación",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"location\",\n    \"location\": {\n        \"latitude\": \"-33.41464880339573\",\n        \"longitude\": \"-70.6155954952158\",\n        \"name\": \"Oficina Elvis\",\n        \"address\": \"El Biscochito\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Botones",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Lista opciones",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"56957600539\", \n  \"type\": \"interactive\",\n  \"interactive\": {\n    \"type\": \"list\",\n    \"header\": {\n      \"type\": \"text\",\n      \"text\": \"Encabezado (Opcional)\"\n    },\n    \"body\": {\n      \"text\": \"Este es el cuerpo del mensaje. Por favor selecciona una opción de la lista.\"\n    },\n    \"footer\": {\n      \"text\": \"Pie de página (Opcional)\"\n    },\n    \"action\": {\n      \"button\": \"Ver Opciones\",\n      \"sections\": [\n        {\n          \"title\": \"Sección 1 (Ej. Cursos)\",\n          \"rows\": [\n            {\n              \"id\": \"curso_01\",\n              \"title\": \"Piloto Privado\",\n              \"description\": \"Curso inicial para volar\"\n            },\n            {\n              \"id\": \"curso_02\",\n              \"title\": \"Piloto Comercial\",\n              \"description\": \"Carrera profesional\"\n            }\n          ]\n        },\n        {\n          \"title\": \"Sección 2 (Ej. Contacto)\",\n          \"rows\": [\n            {\n              \"id\": \"contact_support\",\n              \"title\": \"Hablar con soporte\",\n              \"description\": \"Atención humana\"\n            }\n          ]\n        }\n      ]\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Botones Título",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"text\",\n            \"text\":\"Título de la pregunta\"\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Botones Imagen",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"image\",\n            \"image\":{\n                \"link\":\"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Botones Documento",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"document\",\n            \"document\":{\n                \"link\":\"https://guiaysalud.com/assets/IMG-1-arfP4YY1.png\",\n                \"filename\":\"Nombre documento\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Botones Video",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"messaging_product\": \"whatsapp\",\n    \"recipient_type\": \"individual\",\n    \"to\": \"56957600539\",\n    \"type\": \"interactive\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"header\":{\n            \"type\":\"video\",\n            \"video\":{\n                \"link\":\"https://botwhatsappsample.blob.core.windows.net/videos/crash-bandic.mp4\"\n            }\n        },\n        \"body\": {\n            \"text\": \"Este es un mensaje para usar botones\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"si\",\n                        \"title\": \"Opción si\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"no\",\n                        \"title\": \"Opción no\"\n                    }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": {\n                        \"id\": \"quiza\",\n                        \"title\": \"Opción quizá\"\n                    }\n                }\n            ]\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://graph.facebook.com/v22.0/847112945162261/messages",
+					"protocol": "https",
+					"host": [
+						"graph",
+						"facebook",
+						"com"
+					],
+					"path": [
+						"v22.0",
+						"847112945162261",
+						"messages"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
