@@ -1,0 +1,449 @@
+[{
+  "_id": {
+    "$oid": "6941c4a5067a3287d577b0d9"
+  },
+  "code": "guia_salud",
+  "name": "Formulario Guia y salud",
+  "description": "Para generar guías y 1er filtrado",
+  "version": 1,
+  "isActive": true,
+  "questions": [
+    {
+      "qid": "q1",
+      "label": "¿En qué lugar se originó el cáncer? (Donde apareció por primera vez)",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Cabeza y cuello",
+          "value": "Cabeza y cuello"
+        },
+        {
+          "label": "Colorrectal",
+          "value": "Colorrectal"
+        },
+        {
+          "label": "Endometrio",
+          "value": "Endometrio"
+        },
+        {
+          "label": "Esofago",
+          "value": "Esofago"
+        },
+        {
+          "label": "Gástrico",
+          "value": "Gástrico"
+        },
+        {
+          "label": "GIST",
+          "value": "GIST"
+        },
+        {
+          "label": "Hígado",
+          "value": "Hígado"
+        },
+        {
+          "label": "Leucemia",
+          "value": "Leucemia"
+        },
+        {
+          "label": "Linfoma",
+          "value": "Linfoma"
+        },
+        {
+          "label": "Melanoma",
+          "value": "Melanoma"
+        },
+        {
+          "label": "Mieloma múltiple",
+          "value": "Mieloma múltiple"
+        },
+        {
+          "label": "Ovario",
+          "value": "Ovario"
+        },
+        {
+          "label": "Páncreas",
+          "value": "Páncreas"
+        },
+        {
+          "label": "Próstata",
+          "value": "Próstata"
+        },
+        {
+          "label": "Pulmón",
+          "value": "Pulmón"
+        },
+        {
+          "label": "Renal",
+          "value": "Renal"
+        },
+        {
+          "label": "Vejiga",
+          "value": "Vejiga"
+        },
+        {
+          "label": "Vesicula Viliar",
+          "value": "Vesicula Viliar"
+        },
+        {
+          "label": "Otro",
+          "value": "Otro"
+        }
+      ]
+    },
+    {
+      "qid": "q2",
+      "label": "¿El cáncer está en la cavidad oral?",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Si",
+          "value": 1
+        },
+        {
+          "label": "No",
+          "value": 0
+        }
+      ],
+      "showIf": {
+        "qid": "q1",
+        "equals": "Cabeza y cuello"
+      }
+    },
+    {
+      "qid": "q3",
+      "label": "Tipo de cáncer de mama",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Her2+",
+          "value": "Her2+"
+        },
+        {
+          "label": "Her2-",
+          "value": "Her2-"
+        },
+        {
+          "label": "Triple Negativo",
+          "value": "triple-negativo"
+        },
+        {
+          "label": "No lo sé",
+          "value": 2
+        }
+      ],
+      "showIf": {
+        "qid": "q1",
+        "equals": "Mama"
+      }
+    },
+    {
+      "qid": "q4",
+      "label": "¿Qué tipo de Linfoma es?",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Linfoma de células B",
+          "value": "linfoma-celulas-b"
+        },
+        {
+          "label": "Linfoma de células del manto",
+          "value": "linfoma-celulas-manto"
+        },
+        {
+          "label": "Linfoma folicular",
+          "value": "linfoma-folicular"
+        },
+        {
+          "label": "Linfoma primario",
+          "value": "linfoma-primario"
+        },
+        {
+          "label": "Linfoma de zona marginal",
+          "value": "linfoma-zona-marginal"
+        },
+        {
+          "label": "Linfoma cutáneo",
+          "value": "linfoma-cutaneo"
+        },
+        {
+          "label": "No lo sé",
+          "value": 2
+        },
+        {
+          "label": "Otro",
+          "value": 2
+        }
+      ],
+      "showIf": {
+        "qid": "q1",
+        "equals": "Linfoma"
+      }
+    },
+    {
+      "qid": "q5",
+      "label": "¿Qué tipo de Leucemia es?",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Leucemia mielóide aguda (LMA)",
+          "value": "lma"
+        },
+        {
+          "label": "Leucemia mieloide crónica (LMC)",
+          "value": "lmc"
+        },
+        {
+          "label": "Leucemia Linfoblástica aguda (LLA)",
+          "value": "lla"
+        },
+        {
+          "label": "Leucemia linfática crónica (LLC)",
+          "value": "llc"
+        },
+        {
+          "label": "No lo sé",
+          "value": 2
+        }
+      ],
+      "showIf": {
+        "qid": "q1",
+        "equals": "Leucemia"
+      }
+    },
+    {
+      "qid": "q6",
+      "label": "¿Con qué tipo de cáncer ha sido diagnosticado el paciente?",
+      "type": "text",
+      "required": false,
+      "showIf": {
+        "qid": "q1",
+        "equals": "Otro"
+      }
+    },
+    {
+      "qid": "q7",
+      "label": "¿El cáncer se ha extendido a otros órganos? (Metástasis)",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Si",
+          "value": 1
+        },
+        {
+          "label": "No",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "qid": "q8",
+      "label": "¿Ha recibido algún tratamiento desde que se diagnosticó la metástasis?",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        {
+          "label": "Si",
+          "value": 1
+        },
+        {
+          "label": "No",
+          "value": 0
+        }
+      ],
+      "showIf": {
+        "qid": "q7",
+        "equals": 1
+      }
+    },
+    {
+      "qid": "q9",
+      "label": "¿Ha recibido alguna cirugía relacionada al cáncer?",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        {
+          "label": "Si",
+          "value": 1
+        },
+        {
+          "label": "No",
+          "value": 0
+        },
+        {
+          "label": "Tengo una cirugía programada",
+          "value": "Tengo una cirugía programada"
+        }
+      ],
+      "description": "poner que si es solo para biopsia no se considera"
+    },
+    {
+      "qid": "q10",
+      "label": "¿Cuándo fue la cirugía?",
+      "type": "date",
+      "required": true,
+      "showIf": {
+        "qid": "q9",
+        "equals": 1
+      }
+    },
+    {
+      "qid": "q11",
+      "label": "Describa las características de la cirugía",
+      "type": "text",
+      "required": true,
+      "showIf": {
+        "qid": "q9",
+        "equals": 1
+      }
+    },
+    {
+      "qid": "q12",
+      "label": "¿Recibió alguno de los siguientes tratamientos?",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        {
+          "label": "Quimioterapia",
+          "value": "quimioterapia"
+        },
+        {
+          "label": "Radioterapia",
+          "value": "radioterapia"
+        },
+        {
+          "label": "Inmunoterapia",
+          "value": "inmunoterapia"
+        },
+        {
+          "label": "Terapia Hormonal",
+          "value": "terapia-hormonal"
+        },
+        {
+          "label": "Terapia Dirigida",
+          "value": "terapia-dirigida"
+        },
+        {
+          "label": "No estoy seguro/a",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "qid": "q14",
+      "label": "¿Siente dolores muy intensos?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "label": "Mucho",
+          "value": 2
+        },
+        {
+          "label": "Intermedio",
+          "value": 1
+        },
+        {
+          "label": "Nada",
+          "value": 0
+        }
+      ],
+      "meta": {
+        "rawConditionNumber": 3,
+        "outputHint": "2 si es mucho, 1 si es intermedio, 0 si es nada"
+      }
+    },
+    {
+      "qid": "q14_2",
+      "label": "¿Cuánto tiempo del día necesita descansar en cama?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "label": "Mucho",
+          "value": 2
+        },
+        {
+          "label": "Intermedio",
+          "value": 1
+        },
+        {
+          "label": "Nada",
+          "value": 0
+        }
+      ],
+      "meta": {
+        "rawConditionNumber": 2,
+        "outputHint": "2 si es mucho, 1 si es intermedio, 0 si es nada"
+      }
+    },
+    {
+      "qid": "q15",
+      "label": "¿Le cuesta realizar trabajos, tareas o actividades físicas?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "label": "Mucho",
+          "value": 2
+        },
+        {
+          "label": "Intermedio",
+          "value": 1
+        },
+        {
+          "label": "Nada",
+          "value": 0
+        }
+      ],
+      "meta": {
+        "rawConditionNumber": 1,
+        "outputHint": "2 si es mucho, 1 si es intermedio, 0 si es nada"
+      }
+    },
+    {
+      "qid": "q16",
+      "label": "¿Cuál es el tu sexo?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "qid": "q17",
+      "label": "¿Cuál es tu fecha de nacimiento?",
+      "type": "date",
+      "required": true
+    },
+    {
+      "qid": "q18",
+      "label": "¿En qué región vives?",
+      "type": "text",
+      "required": true
+    },
+    {
+      "qid": "q19",
+      "label": "¿Cuál es tu nombre?",
+      "type": "name",
+      "required": true
+    },
+    {
+      "qid": "q20",
+      "label": "Email de contacto",
+      "type": "email",
+      "required": true
+    },
+    {
+      "qid": "q21",
+      "label": "Teléfono de contacto",
+      "type": "phone",
+      "required": true
+    }
+  ],
+  "createdAt": "2024-10-01T00:00:00Z",
+  "updatedAt": "2025-12-16T00:00:00Z"
+}]
