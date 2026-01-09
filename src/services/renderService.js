@@ -2,7 +2,7 @@ export function renderConsentPrompt(name) {
   const who = name ? ` ${name}` : "";
   return {
     text:
-      `Hola${who}.\n` +
+      `Hola${who}. Gracias por escribirnos.\n` +
       `Antes de comenzar, necesito tu consentimiento para recopilar informacion de salud con fines de orientacion y derivacion clinica.\n\n` +
       `¿Aceptas continuar?`,
     buttons: [
@@ -15,6 +15,13 @@ export function renderConsentPrompt(name) {
 export function renderQuestion(question) {
   const header = question.label;
   const desc = question.description ? `\n_${question.description}_` : "";
+
+  if (question.qid === "q16") {
+    return {
+      text: `${header}${desc}\n\nResponde con el texto de la opcion:`,
+      buttons: [{ label: "Masculino", value: "masculino" }],
+    };
+  }
 
   if (question.type === "dropdown" || question.type === "single_choice" || question.type === "select_one") {
     const options = (question.options || []).map((o, idx) => `${idx + 1}) ${o.label}`).join("\n");
@@ -36,7 +43,11 @@ export function renderValidationError(question, error) {
     case "required":
       return { text: `Necesito una respuesta para continuar.\n\n${renderQuestion(question).text}`, buttons: renderQuestion(question).buttons || [] };
     case "invalid_option":
-      return { text: `Por favor elige una opcion valida.\n\n${renderQuestion(question).text}`, buttons: renderQuestion(question).buttons || [] };
+      {
+        const opts = question.options || [];
+        const example = opts.length ? `Ejemplo: 1 o "${opts[0].label}".` : `Ejemplo: escribe la opcion exacta.`;
+        return { text: `Por favor elige una opcion valida.\n${example}\n\n${renderQuestion(question).text}`, buttons: renderQuestion(question).buttons || [] };
+      }
     case "invalid_date":
       return { text: `La fecha no parece valida. Usa formato dd-mm-aaaa (ej: 31-12-1999).`, buttons: [] };
     case "invalid_email":

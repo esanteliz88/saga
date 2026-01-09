@@ -148,8 +148,14 @@ console.log("Received bot message");
   const agent = decideAgent({ session, question: null });
   logger.info({ msg: "INCOMING", wa_id, formCode, status: session.status, text: msg.text, attachments: atts.length });
 
+  const incomingId = msg.id || msg.message_id;
+  if (incomingId && (memory?.events || []).some((e) => e.direction === "IN" && e.messageId === incomingId)) {
+    logger.info({ msg: "DUPLICATE_INCOMING", wa_id, messageId: incomingId });
+    return res.json({});
+  }
+
   // Log IN
-  await appendMemory(memory, { direction: "IN", messageId: msg.id, type: msg.type || "text", text: msg.text, attachments: atts, agent });
+  await appendMemory(memory, { direction: "IN", messageId: incomingId, type: msg.type || "text", text: msg.text, attachments: atts, agent });
 
   // Commands
   const command = parseCommand(msg.text);
@@ -395,7 +401,7 @@ console.log("Received bot message");
 
   if (session.status !== "IN_PROGRESS") {
     const out = {
-      text: `Tu sesion esta en estado: ${session.status}. Elige que hacer:`,
+      text: `Hola. Tu sesion esta en estado: ${session.status}. Elige que hacer:`,
       buttons: [
         { label: "Chatear", value: "CHAT" },
         { label: "Nuevo formulario", value: "START_FORM" },
