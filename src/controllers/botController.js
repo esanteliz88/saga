@@ -287,8 +287,33 @@ console.log("Received bot message");
 
   // Consent
   if (session.status === "AWAITING_CONSENT") {
+    const consentYes = isAffirmative(msg.text) || String(msg.text).toUpperCase().includes("SI_ACEPTO");
+    const consentNo = isNegative(msg.text) || String(msg.text).toUpperCase() === "NO";
+
+    if (consentYes) {
+      session.status = "IN_PROGRESS";
+      session.currentQid = undefined;
+      await session.save();
+      const { question, block } = resolveCurrentQuestion(form, session);
+      const intro = block ? renderBlockIntro(block) : null;
+      const out = question ? renderQuestion(question) : {
+        text: "No hay preguntas configuradas. Si prefieres, usa el formulario web o reinicia con 'reiniciar'.",
+        buttons: [{ label: "Formulario web", value: "FORM_WEB" }]
+      };
+      const mergedText = intro ? `${intro.text}\n\n${out.text}` : out.text;
+      await appendMemory(memory, { direction: "OUT", type: "text", text: mergedText, agent: decideAgent({ session, question }) });
+      return res.json({ reply: { ...out, text: mergedText, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+    }
+    if (consentNo) {
+      session.status = "CANCELLED";
+      await session.save();
+      const out = { text: "Entendido. Sin consentimiento no puedo continuar. Si cambias de opinion, escribe 'reiniciar'.", buttons: [] };
+      await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
+      return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
+    }
+
     // Chat libre sin consentimiento cuando chatFree=true
-    if (session.notes?.chatFree && !isFormIntent(msg.text) && !isAffirmative(msg.text)) {
+    if (session.notes?.chatFree && !isFormIntent(msg.text) && !consentYes) {
       const profile = await getPatientProfileSummary(wa_id);
       const convo = await getRecentConversation(wa_id, formCode, 6);
       const ai = await generateLLMAnswer({
@@ -308,7 +333,7 @@ console.log("Received bot message");
       return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
     }
 
-    if (!isAffirmative(msg.text) && !isNegative(msg.text) && !isFormIntent(msg.text)) {
+    if (!consentYes && !consentNo && !isFormIntent(msg.text)) {
       const greet = isGreeting(msg.text);
       let answerText = null;
       const profile = await getPatientProfileSummary(wa_id);
@@ -351,28 +376,6 @@ console.log("Received bot message");
       session.updatedAt = new Date();
       await session.save();
       const out = { text, buttons };
-      await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
-      return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
-    }
-
-    if (isAffirmative(msg.text) || String(msg.text).toUpperCase().includes("SI_ACEPTO")) {
-      session.status = "IN_PROGRESS";
-      session.currentQid = undefined;
-      await session.save();
-      const { question, block } = resolveCurrentQuestion(form, session);
-      const intro = block ? renderBlockIntro(block) : null;
-      const out = question ? renderQuestion(question) : {
-        text: "No hay preguntas configuradas. Si prefieres, usa el formulario web o reinicia con 'reiniciar'.",
-        buttons: [{ label: "Formulario web", value: "FORM_WEB" }]
-      };
-      const mergedText = intro ? `${intro.text}\n\n${out.text}` : out.text;
-      await appendMemory(memory, { direction: "OUT", type: "text", text: mergedText, agent: decideAgent({ session, question }) });
-      return res.json({ reply: { ...out, text: mergedText, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
-    }
-    if (isNegative(msg.text) || String(msg.text).toUpperCase() === "NO") {
-      session.status = "CANCELLED";
-      await session.save();
-      const out = { text: "Entendido. Sin consentimiento no puedo continuar. Si cambias de opinion, escribe 'reiniciar'.", buttons: [] };
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
       return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
     }
