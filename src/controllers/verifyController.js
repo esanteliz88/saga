@@ -18,7 +18,7 @@ import { sendWhatsAppMessage } from "../services/fbService.js";
 export async function verifyMessage(req, res) {
     try {
         const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-        console.log(msg || req.body);
+        console.log("VERIFY_INCOMING_RAW", msg || req.body);
 
         if (!msg) {
             // Nothing to process
@@ -44,6 +44,7 @@ export async function verifyMessage(req, res) {
             },
             formCode: undefined
         };
+        console.log("VERIFY_TRANSFORMED", transformed);
 
         // If caller requests the reply (WS proxy), capture handleBotMessage output and return it.
         const wantReply = req.query?.returnReply === "true" || req.headers["x-return-reply"] === "1" || req.headers["x-return-reply"] === "true";
@@ -101,7 +102,10 @@ export async function verifyMessage(req, res) {
                         const event = reply.buttons && reply.buttons.length
                             ? { type: "interactive", text, buttons: reply.buttons }
                             : { type: "text", text };
+                        console.log("VERIFY_REPLY_TO_SEND", { to: transformed.user.wa_id, event });
                         await sendWhatsAppMessage(transformed.user.wa_id, event);
+                    } else {
+                        console.log("VERIFY_NO_TEXT_REPLY", captured);
                     }
                 } catch (e) {
                     console.error("handleBotMessage error:", e);

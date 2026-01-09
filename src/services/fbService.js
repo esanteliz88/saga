@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import { logger } from "../utils/logger.js";
 
 const PHONE_ID = process.env.FB_PHONE_ID || process.env.FB_PHONE_NUMBER_ID || "847112945162261";
-const TOKEN = process.env.FB_TOKEN || process.env.FB_AUTH_TOKEN || process.env.FB_BEARER_TOKEN || "";
+const TOKEN = process.env.FB_TOKEN || process.env.FB_AUTH_TOKEN || process.env.FB_BEARER_TOKEN || "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD";
 const ENABLE = (process.env.FB_SEND_ENABLED || "false").toLowerCase() === "true";
 
 function endpoint() {
@@ -11,6 +11,14 @@ function endpoint() {
 }
 
 export async function sendWhatsAppMessage(to, event) {
+  logger.info({
+    msg: "FB_SEND_ATTEMPT",
+    enabled: ENABLE,
+    phoneId: PHONE_ID ? "set" : "missing",
+    token: TOKEN ? "set" : "missing",
+    to,
+    event,
+  });
   if (!ENABLE) {
     logger.info({ msg: "FB_SEND_SKIPPED", reason: "disabled" });
     return { ok: false, reason: "fb_send_disabled" };
@@ -68,7 +76,7 @@ export async function sendWhatsAppMessage(to, event) {
   }
 
   try {
-    logger.info({ msg: "FB_SEND_HTTP", to, payload: body });
+    logger.info({ msg: "FB_SEND_HTTP", to, url, payload: body });
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${TOKEN}` },
