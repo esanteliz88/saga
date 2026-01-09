@@ -652,7 +652,7 @@ console.log("Received bot message");
     await sendFinalizePayload(payload);
     const filterPayload = buildFilterPayload(session, form);
     await sendFilterPayload(filterPayload);
-    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join(\"\n\n\");
+    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join("\n\n");
     const buttons = [
       { label: "Nuevo formulario", value: "START_FORM" },
       { label: "Chatear", value: "CHAT" },
@@ -777,7 +777,7 @@ console.log("Received bot message");
     await sendFinalizePayload(payload);
     const filterPayload = buildFilterPayload(session, form);
     await sendFilterPayload(filterPayload);
-    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join(\"\n\n\");
+    const finalText = [out.text, "Que prefieres ahora?"].filter(Boolean).join("\n\n");
     const buttons = [
       { label: "Nuevo formulario", value: "START_FORM" },
       { label: "Chatear", value: "CHAT" },
