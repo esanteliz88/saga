@@ -11,7 +11,10 @@ function endpoint() {
 }
 
 export async function sendWhatsAppMessage(to, event) {
-  if (!ENABLE) return { ok: false, reason: "fb_send_disabled" };
+  if (!ENABLE) {
+    logger.info({ msg: "FB_SEND_SKIPPED", reason: "disabled" });
+    return { ok: false, reason: "fb_send_disabled" };
+  }
   const url = endpoint();
   if (!url) {
     logger.warn({ msg: "FB_NO_PHONE_ID" });
@@ -45,6 +48,7 @@ export async function sendWhatsAppMessage(to, event) {
   }
 
   try {
+    logger.info({ msg: "FB_SEND_HTTP", to, payload: body });
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${TOKEN}` },

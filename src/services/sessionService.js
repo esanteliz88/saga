@@ -1,6 +1,7 @@
 import { FormSession } from "../models/FormSession.js";
 import { FormMemory } from "../models/FormMemory.js";
 import { sendWhatsAppMessage } from "./fbService.js";
+import { logger } from "../utils/logger.js";
 
 function ensureBlockStatus(session, blockId) {
   if (!blockId) return null;
@@ -39,14 +40,21 @@ export async function appendMemory(memory, event) {
       if (to) {
         // Map event to a simple structure for fbService
         const ev = { type: event.type || "text", text: event.text || (event.reply && event.reply.text) || "", buttons: event.buttons || [] };
-        // fire and forget
-        void sendWhatsAppMessage(to, ev).catch((e) => {
-          // swallow
-        });
+        logger.info({ msg: "FB_SEND_ATTEMPT", to, event: ev });
+        // send and log result
+        sendWhatsAppMessage(to, ev)
+          .then((r) => {
+            logger.info({ msg: "FB_SEND_RESULT", to, ok: r?.ok, result: r });
+          })
+          .catch((err) => {
+            logger.error({ msg: "FB_SEND_EXCEPTION", to, err: err?.message || err });
+          });
+      } else {
+        logger.warn({ msg: "FB_SEND_NO_TARGET", event });
       }
     }
   } catch (e) {
-    // ignore
+    logger.error({ msg: "FB_SEND_INTERNAL_ERROR", err: e?.message || e });
   }
 }
 
