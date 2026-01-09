@@ -24,9 +24,9 @@ export function renderQuestion(question) {
   }
 
   if (question.type === "dropdown" || question.type === "single_choice" || question.type === "select_one") {
-    const options = (question.options || []).map((o, idx) => `${idx + 1}) ${o.label}`).join("\n");
+    const options = (question.options || []).map((o) => `- ${o.label}`).join("\n");
     return {
-      text: `${header}${desc}\n\nResponde con el numero o el texto de la opcion:\n${options}`,
+      text: `${header}${desc}\n\nElige una opcion:\n${options}`,
       buttons: (question.options || []).map((o) => ({ label: o.label, value: o.value })),
     };
   }
@@ -45,7 +45,7 @@ export function renderValidationError(question, error) {
     case "invalid_option":
       {
         const opts = question.options || [];
-        const example = opts.length ? `Ejemplo: 1 o "${opts[0].label}".` : `Ejemplo: escribe la opcion exacta.`;
+        const example = opts.length ? `Ejemplo: "${opts[0].label}".` : `Ejemplo: escribe la opcion exacta.`;
         return { text: `Por favor elige una opcion valida.\n${example}\n\n${renderQuestion(question).text}`, buttons: renderQuestion(question).buttons || [] };
       }
     case "invalid_date":

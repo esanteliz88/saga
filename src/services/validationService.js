@@ -32,11 +32,6 @@ function coerceSelection(input, options = []) {
     });
     if (byYesNoValue) return { value: byYesNoValue.value, label: byYesNoValue.label };
   }
-  const idx = Number(raw);
-  if (!Number.isNaN(idx) && idx >= 1 && idx <= options.length) {
-    const opt = options[idx - 1];
-    return { value: opt.value, label: opt.label };
-  }
   return null;
 }
 
