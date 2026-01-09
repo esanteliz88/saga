@@ -32,9 +32,29 @@ export async function sendWhatsAppMessage(to, event) {
     body.type = "text";
     body.text = { preview_url: false, body: event.text || String(event) };
   } else if (event.type === "interactive" || (event.buttons && event.buttons.length)) {
-    body.type = "interactive";
-    const buttons = (event.buttons || []).slice(0, 3).map((b, idx) => ({ type: "reply", reply: { id: String(b.value ?? b.id ?? idx), title: String(b.label ?? b.title ?? b) } }));
-    body.interactive = { type: "button", body: { text: event.text || "" }, action: { buttons } };
+    const allButtons = event.buttons || [];
+    if (allButtons.length <= 3) {
+      body.type = "interactive";
+      const buttons = allButtons.map((b, idx) => ({
+        type: "reply",
+        reply: { id: String(b.value ?? b.id ?? idx), title: String(b.label ?? b.title ?? b) }
+      }));
+      body.interactive = { type: "button", body: { text: event.text || "" }, action: { buttons } };
+    } else {
+      body.type = "interactive";
+      const rows = allButtons.slice(0, 10).map((b, idx) => ({
+        id: String(b.value ?? b.id ?? idx),
+        title: String(b.label ?? b.title ?? b)
+      }));
+      body.interactive = {
+        type: "list",
+        body: { text: event.text || "" },
+        action: {
+          button: "Ver opciones",
+          sections: [{ title: "Opciones", rows }]
+        }
+      };
+    }
   } else if (event.type === "image" && event.url) {
     body.type = "image";
     body.image = { link: event.url };

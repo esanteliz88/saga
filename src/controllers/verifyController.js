@@ -87,11 +87,15 @@ export async function verifyMessage(req, res) {
                     await handleBotMessage(fakeReq, captureRes);
 
                     const reply = captured?.reply || captured || {};
-                    const text =
+                    let text =
                         reply.text ||
                         reply.message?.text ||
                         reply.reply?.text ||
                         null;
+
+                    if (!text && reply.buttons && reply.buttons.length) {
+                        text = "Selecciona una opcion:";
+                    }
 
                     if (text) {
                         const event = reply.buttons && reply.buttons.length

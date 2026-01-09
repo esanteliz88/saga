@@ -3,6 +3,8 @@ import { FormMemory } from "../models/FormMemory.js";
 import { sendWhatsAppMessage } from "./fbService.js";
 import { logger } from "../utils/logger.js";
 
+const SEND_FROM_MEMORY = (process.env.FB_SEND_FROM_MEMORY || "false").toLowerCase() === "true";
+
 function ensureBlockStatus(session, blockId) {
   if (!blockId) return null;
   const found = (session.blockStatuses || []).find((b) => b.blockId === blockId);
@@ -34,8 +36,8 @@ export async function appendMemory(memory, event) {
   memory.updatedAt = new Date();
   await memory.save();
   try {
-    // If this is an outgoing event and FB sending is enabled, forward to WhatsApp API
-    if (event && event.direction === "OUT") {
+    // Optional forwarding from memory events (disabled by default to avoid double-send)
+    if (SEND_FROM_MEMORY && event && event.direction === "OUT") {
       const to = memory.wa_id || (memory && memory.waId) || null;
       if (to) {
         // Map event to a simple structure for fbService
