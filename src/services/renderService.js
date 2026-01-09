@@ -3,8 +3,9 @@ export function renderConsentPrompt(name) {
   return {
     text:
       `Hola${who}. Gracias por escribirnos.\n` +
-      `Antes de comenzar, necesito tu consentimiento para recopilar informacion de salud con fines de orientacion y derivacion clinica.\n\n` +
-      `¿Aceptas continuar?`,
+      `Te ayudare a completar un formulario breve con fines de orientacion y derivacion clinica.\n` +
+      `Antes de comenzar, necesito tu consentimiento para recopilar informacion de salud.\n\n` +
+      `Aceptas continuar?`,
     buttons: [
       { label: "Si, acepto", value: "SI_ACEPTO" },
       { label: "No", value: "NO" }
@@ -18,7 +19,7 @@ export function renderQuestion(question) {
 
   if (question.qid === "q16") {
     return {
-      text: `${header}${desc}\n\nResponde con el texto de la opcion:`,
+      text: `${header}${desc}\n\nElige una opcion:`,
       buttons: [{ label: "Masculino", value: "masculino" }],
     };
   }
@@ -55,7 +56,7 @@ export function renderValidationError(question, error) {
     case "invalid_phone":
       return { text: `Ese telefono no parece valido. Ejemplo: +56912345678`, buttons: [] };
     case "invalid_name":
-      return { text: `¿Me indicas tu nombre y apellido?`, buttons: [] };
+      return { text: `Me indicas tu nombre y apellido?`, buttons: [] };
     default:
       return { text: "No pude validar tu respuesta.", buttons: [] };
   }
@@ -87,9 +88,11 @@ export function renderCompleted(form, summaryText) {
 export function renderBlockIntro(block) {
   const header = block.name || block.id;
   const desc = block.description ? `\n${block.description}` : "";
-  return { text: `Iniciemos el bloque: ${header}.${desc}`, buttons: [] };
+  return { text: `Vamos con ${header}.${desc}`, buttons: [] };
 }
 
 export function renderBlockCompleted(block) {
   return { text: `Bloque ${block.name || block.id} completado.`, buttons: [] };
 }
+
+

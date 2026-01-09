@@ -1,8 +1,8 @@
-const defaultModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const apiKey = process.env.OPENAI_API_KEY;
 import { logger } from "../utils/logger.js";
 
 export async function generateLLMAnswer({ prompt, systemPrompt }) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const defaultModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
   if (!apiKey) {
     logger.warn({ msg: "LLM skipped: missing OPENAI_API_KEY" });
     return { ok: false, text: "No hay clave de IA configurada.", reason: "missing_api_key" };

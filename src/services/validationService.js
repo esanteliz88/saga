@@ -6,8 +6,8 @@ function normalizeText(text) { return String(text ?? "").trim(); }
 function normalizeYesNo(text) {
   const t = normalizeText(text).toLowerCase();
   if (!t) return null;
-  if (["si", "sí", "s", "yes", "y", "true", "1"].includes(t)) return "yes";
-  if (["no", "n", "false", "0"].includes(t)) return "no";
+  if (["si", "sí", "s", "yes", "y", "true"].includes(t)) return "yes";
+  if (["no", "n", "false"].includes(t)) return "no";
   return null;
 }
 
@@ -27,8 +27,8 @@ function coerceSelection(input, options = []) {
     if (byYesNoLabel) return { value: byYesNoLabel.value, label: byYesNoLabel.label };
     const byYesNoValue = options.find((o) => {
       const v = String(o.value).toLowerCase();
-      if (yn === "yes") return ["1", "true", "si", "sí", "yes"].includes(v);
-      return ["0", "false", "no"].includes(v);
+      if (yn === "yes") return ["true", "si", "sí", "yes"].includes(v);
+      return ["false", "no"].includes(v);
     });
     if (byYesNoValue) return { value: byYesNoValue.value, label: byYesNoValue.label };
   }
