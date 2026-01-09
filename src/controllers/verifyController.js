@@ -134,10 +134,12 @@ function GetTextUser(messages){
         var typeInteractive = interactiveObject["type"];
         
         if(typeInteractive == "button_reply"){
-            text = (interactiveObject["button_reply"])["title"];
+            const reply = interactiveObject["button_reply"] || {};
+            text = reply["id"] || reply["title"] || "";
         }
         else if(typeInteractive == "list_reply"){
-            text = (interactiveObject["list_reply"])["title"];
+            const reply = interactiveObject["list_reply"] || {};
+            text = reply["id"] || reply["title"] || "";
         }else{
             console.log("sin mensaje");
         }
