@@ -27,6 +27,24 @@ function safeAttachments(message) {
 
 const MAX_LIST_ROWS = 10;
 const PAGE_SIZE = 9;
+const REGION_OPTIONS = [
+  { label: "Arica y Parinacota", value: "Arica y Parinacota" },
+  { label: "Tarapaca", value: "Tarapaca" },
+  { label: "Antofagasta", value: "Antofagasta" },
+  { label: "Atacama", value: "Atacama" },
+  { label: "Coquimbo", value: "Coquimbo" },
+  { label: "Valparaiso", value: "Valparaiso" },
+  { label: "Metropolitana", value: "Metropolitana" },
+  { label: "O Higgins", value: "O Higgins" },
+  { label: "Maule", value: "Maule" },
+  { label: "Nuble", value: "Nuble" },
+  { label: "Biobio", value: "Biobio" },
+  { label: "Araucania", value: "Araucania" },
+  { label: "Los Rios", value: "Los Rios" },
+  { label: "Los Lagos", value: "Los Lagos" },
+  { label: "Aysen", value: "Aysen" },
+  { label: "Magallanes", value: "Magallanes" }
+];
 
 function meta(session, formCode, currentQid, currentBlockId) {
   return { sessionStatus: session.status, currentQid: currentQid || session.currentQid || null, currentBlockId: currentBlockId || session.currentBlockId || null, formCode, wa_id: session.wa_id };
@@ -66,6 +84,14 @@ function isChoiceQuestion(question) {
   return ["dropdown", "single_choice", "select_one"].includes(question?.type);
 }
 
+function applyQuestionOverrides(question) {
+  if (!question) return question;
+  if (question.qid === "q18" && !(question.options || []).length) {
+    return { ...question, type: "select_one", options: REGION_OPTIONS };
+  }
+  return question;
+}
+
 function getOptionPages(session) {
   return (session.notes && session.notes.optionPages) || {};
 }
@@ -78,9 +104,10 @@ async function setOptionPage(session, qid, page) {
 }
 
 function buildPagedQuestion(question, session) {
-  if (!question || !isChoiceQuestion(question)) return question;
-  const options = question.options || [];
-  if (options.length <= MAX_LIST_ROWS) return question;
+  const q = applyQuestionOverrides(question);
+  if (!q || !isChoiceQuestion(q)) return q;
+  const options = q.options || [];
+  if (options.length <= MAX_LIST_ROWS) return q;
 
   const pages = getOptionPages(session);
   let page = Number(pages[question.qid] || 0);
@@ -94,7 +121,7 @@ function buildPagedQuestion(question, session) {
     ? [...slice, { label: "Ver mas", value: `MORE:${question.qid}:${page + 1}` }]
     : slice;
 
-  return { ...question, options: pagedOptions };
+  return { ...q, options: pagedOptions };
 }
 
 function parseMoreToken(text) {
@@ -583,30 +610,31 @@ console.log("Received bot message");
 
   // Current question
   const { question, block } = resolveCurrentQuestion(form, session);
+  const normalizedQuestion = applyQuestionOverrides(question);
   const audioAtt = atts.find((a) => a.kind === "audio");
-  if (!msg.text && audioAtt && question) {
+  if (!msg.text && audioAtt && normalizedQuestion) {
     const tx = await transcribeAudioAttachment(audioAtt);
     if (tx.ok && tx.text) {
       msg.text = tx.text;
-      logger.info({ msg: "AUDIO_TRANSCRIBED", wa_id, qid: question.qid, textLen: tx.text.length });
+      logger.info({ msg: "AUDIO_TRANSCRIBED", wa_id, qid: normalizedQuestion.qid, textLen: tx.text.length });
     } else {
       const out = { text: "No pude procesar el audio. Por favor responde con texto o botones.", buttons: [] };
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
-      return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+      return res.json({ reply: { ...out, meta: meta(session, formCode, normalizedQuestion.qid, block?.id) }, actions: [] });
     }
   }
-  if (!msg.text && atts.length > 0 && question && !question.meta?.requiresEvidence) {
+  if (!msg.text && atts.length > 0 && normalizedQuestion && !normalizedQuestion.meta?.requiresEvidence) {
     const out = { text: "Recibi un archivo, pero necesito tu respuesta en texto o con botones para continuar.", buttons: [] };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
-    return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, normalizedQuestion.qid, block?.id) }, actions: [] });
   }
   const more = parseMoreToken(msg.text);
-  if (more && question && more.qid === question.qid && isChoiceQuestion(question)) {
-    await setOptionPage(session, question.qid, more.page);
-    const paged = buildPagedQuestion(question, session);
+  if (more && normalizedQuestion && more.qid === normalizedQuestion.qid && isChoiceQuestion(normalizedQuestion)) {
+    await setOptionPage(session, normalizedQuestion.qid, more.page);
+    const paged = buildPagedQuestion(normalizedQuestion, session);
     const out = paged ? renderQuestion(paged) : { text: "No hay preguntas pendientes.", buttons: [] };
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
-    return res.json({ reply: { ...out, meta: meta(session, formCode, question?.qid, block?.id) }, actions: [] });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, normalizedQuestion?.qid, block?.id) }, actions: [] });
   }
   if (!question) {
     session.status = "COMPLETED";
@@ -642,15 +670,16 @@ console.log("Received bot message");
   if (atts.length) await attachEvidenceToAnswer(session, question.qid, atts);
 
   // Validate
-  const result = validateAnswer(question, { type: msg.type, text: msg.text, attachments: atts });
+  const effectiveQuestion = normalizedQuestion || question;
+  const result = validateAnswer(effectiveQuestion, { type: msg.type, text: msg.text, attachments: atts });
   let validated = result;
 
   // LLM fallback for options
-  if (!validated.ok && validated.error === "invalid_option" && msg.text && (question.options || []).length) {
-    const coerced = await llmCoerceOption(question, msg.text);
+  if (!validated.ok && validated.error === "invalid_option" && msg.text && (effectiveQuestion.options || []).length) {
+    const coerced = await llmCoerceOption(effectiveQuestion, msg.text);
     if (coerced) {
       validated = { ok: true, value: coerced.value, label: coerced.label, raw: msg.text };
-      logger.info({ msg: "LLM_OPTION_COERCED", wa_id, qid: question.qid, value: coerced.value });
+      logger.info({ msg: "LLM_OPTION_COERCED", wa_id, qid: effectiveQuestion.qid, value: coerced.value });
     }
   }
 
@@ -659,55 +688,55 @@ console.log("Received bot message");
     if (session.status === "PENDING_REVIEW") {
       const out = { text: "Alcanzaste el limite de intentos. Derivare tu caso a un humano.", buttons: [] };
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "SYSTEM" });
-      return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
+      return res.json({ reply: { ...out, meta: meta(session, formCode, effectiveQuestion.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
     }
-    const paged = buildPagedQuestion(question, session);
+    const paged = buildPagedQuestion(effectiveQuestion, session);
     const out = renderValidationError(paged, validated.error);
     await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: decideAgent({ session, question }) });
-    logger.info({ msg: "VALIDATION_FAIL", wa_id, qid: question.qid, error: validated.error });
-    return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+    logger.info({ msg: "VALIDATION_FAIL", wa_id, qid: effectiveQuestion.qid, error: validated.error });
+    return res.json({ reply: { ...out, meta: meta(session, formCode, effectiveQuestion.qid, block?.id) }, actions: [] });
   }
 
   // AI risk/consistency check on validated answer
-  if (question.meta?.riskCheck) {
-    const aiRisk = await evaluateAnswerRisk({ session, question, answer: validated });
-    logger.info({ msg: "RISK_CHECK", wa_id, qid: question.qid, ok: aiRisk.ok, reason: aiRisk.reason });
+  if (effectiveQuestion.meta?.riskCheck) {
+    const aiRisk = await evaluateAnswerRisk({ session, question: effectiveQuestion, answer: validated });
+    logger.info({ msg: "RISK_CHECK", wa_id, qid: effectiveQuestion.qid, ok: aiRisk.ok, reason: aiRisk.reason });
     if (!aiRisk.ok) {
       session.status = "PENDING_REVIEW";
       await session.save();
       const out = { text: "Detecte que esta respuesta requiere revision humana. Derivare tu caso.", buttons: [] };
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "MEDIC" });
-      return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
+      return res.json({ reply: { ...out, meta: meta(session, formCode, effectiveQuestion.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
     }
   }
 
   // Validate evidence when required by meta
-  if (question.meta?.requiresEvidence && atts.length) {
-    const ev = await validateEvidence(question, atts, session);
+  if (effectiveQuestion.meta?.requiresEvidence && atts.length) {
+    const ev = await validateEvidence(effectiveQuestion, atts, session);
     if (!ev.ok) {
       await recordBlockAttempt(session, block?.id);
       if (session.status === "PENDING_REVIEW") {
         const out = { text: "Los documentos no pasaron la verificacion. Enviaremos a revision humana.", buttons: [] };
-        logger.warn({ msg: "EVIDENCE_FAIL_REVIEW", wa_id, qid: question.qid, reason: ev.reason });
+        logger.warn({ msg: "EVIDENCE_FAIL_REVIEW", wa_id, qid: effectiveQuestion.qid, reason: ev.reason });
         await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "NURSE" });
-        return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
+        return res.json({ reply: { ...out, meta: meta(session, formCode, effectiveQuestion.qid, block?.id) }, actions: [{ type: "HANDOFF" }] });
       }
       const out = { text: `Los archivos no son validos (${ev.reason}). Intenta nuevamente.`, buttons: [] };
-      logger.warn({ msg: "EVIDENCE_FAIL_RETRY", wa_id, qid: question.qid, reason: ev.reason });
+      logger.warn({ msg: "EVIDENCE_FAIL_RETRY", wa_id, qid: effectiveQuestion.qid, reason: ev.reason });
       await appendMemory(memory, { direction: "OUT", type: "text", text: out.text, agent: "NURSE" });
-      return res.json({ reply: { ...out, meta: meta(session, formCode, question.qid, block?.id) }, actions: [] });
+      return res.json({ reply: { ...out, meta: meta(session, formCode, effectiveQuestion.qid, block?.id) }, actions: [] });
     }
   }
 
   // Save answer (text or null if only evidence)
   if (msg.text && String(msg.text).trim().length) {
-    await saveAnswer(session, { qid: question.qid, value: validated.value, label: validated.label, raw: validated.raw });
+    await saveAnswer(session, { qid: effectiveQuestion.qid, value: validated.value, label: validated.label, raw: validated.raw });
   } else {
-    await saveAnswer(session, { qid: question.qid, value: null, label: null, raw: null });
+    await saveAnswer(session, { qid: effectiveQuestion.qid, value: null, label: null, raw: null });
   }
-  if (session.notes?.optionPages && session.notes.optionPages[question.qid] !== undefined) {
+  if (session.notes?.optionPages && session.notes.optionPages[effectiveQuestion.qid] !== undefined) {
     const pages = { ...session.notes.optionPages };
-    delete pages[question.qid];
+    delete pages[effectiveQuestion.qid];
     session.notes = { ...(session.notes || {}), optionPages: pages };
   }
 
