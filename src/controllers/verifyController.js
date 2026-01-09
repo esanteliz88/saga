@@ -1,12 +1,19 @@
 export function verifyToken(req, res) {
-  console.log(req);
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+    const expected = process.env.FB_VERIFY_TOKEN || process.env.VERIFY_TOKEN || "";
 
-      return res.send("hola andres");
+    if (mode === "subscribe" && token && expected && token === expected) {
+        return res.status(200).send(challenge);
+    }
 
+    return res.sendStatus(403);
 }
 
 
 import { handleBotMessage } from "./botController.js";
+import { sendWhatsAppMessage } from "../services/fbService.js";
 
 export async function verifyMessage(req, res) {
     try {
@@ -63,10 +70,35 @@ export async function verifyMessage(req, res) {
 
         // Default: dispatch asynchronously and return EVENT_RECEIVED immediately (Facebook webhook behavior)
         try {
-            const dummyRes = { json: () => {}, status: () => ({ json: () => {} }), send: () => {} };
-            setImmediate(() => {
+            const dummyRes = {
+                json: (obj) => obj,
+                status: (_code) => ({ json: (obj) => obj }),
+                send: (v) => (typeof v === "string" ? { text: v } : v)
+            };
+            setImmediate(async () => {
                 try {
-                    void handleBotMessage(fakeReq, dummyRes);
+                    let captured = null;
+                    const captureRes = {
+                        json: (obj) => { captured = obj; },
+                        status: (_code) => ({ json: (obj) => { captured = obj; } }),
+                        send: (v) => { captured = typeof v === "string" ? { text: v } : v; }
+                    };
+
+                    await handleBotMessage(fakeReq, captureRes);
+
+                    const reply = captured?.reply || captured || {};
+                    const text =
+                        reply.text ||
+                        reply.message?.text ||
+                        reply.reply?.text ||
+                        null;
+
+                    if (text) {
+                        const event = reply.buttons && reply.buttons.length
+                            ? { type: "interactive", text, buttons: reply.buttons }
+                            : { type: "text", text };
+                        await sendWhatsAppMessage(transformed.user.wa_id, event);
+                    }
                 } catch (e) {
                     console.error("handleBotMessage error:", e);
                 }

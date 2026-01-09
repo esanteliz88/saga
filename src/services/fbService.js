@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import { logger } from "../utils/logger.js";
 
-const PHONE_ID = process.env.FB_PHONE_ID || process.env.FB_PHONE_NUMBER_ID || "";
+const PHONE_ID = process.env.FB_PHONE_ID || process.env.FB_PHONE_NUMBER_ID || "847112945162261";
 const TOKEN = process.env.FB_TOKEN || process.env.FB_AUTH_TOKEN || process.env.FB_BEARER_TOKEN || "";
 const ENABLE = (process.env.FB_SEND_ENABLED || "false").toLowerCase() === "true";
 

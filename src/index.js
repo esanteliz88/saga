@@ -9,10 +9,10 @@ import { logger } from "./utils/logger.js";
 import http from "http";
 import { WebSocketServer } from "ws";
 import { handleBotMessage } from "./controllers/botController.js";
+import { registerConnection, unregisterConnection, sendTo, unregisterByWs } from "./services/wsRegistry.js";
 
 loadEnv();
 await connectDb();
-
 
 const app = express();
 app.set("trust proxy", 1);
@@ -53,11 +53,24 @@ wss.on("connection", (ws) => {
     try {
       body = typeof data === "string" ? JSON.parse(data) : JSON.parse(data.toString());
     } catch (e) {
-      // if not JSON, ignore
       return ws.send(JSON.stringify({ error: "invalid_json" }));
     }
 
-    // Normalize WS payload (accept both direct message shape and Graph-like)
+    // If client registers its wa_id, store connection
+    if (body && body.type === "register" && body.wa_id) {
+      registerConnection(body.wa_id, ws);
+      try { ws.send(JSON.stringify({ type: "registered", wa_id: body.wa_id })); } catch (e) {}
+      return;
+    }
+
+    // If client asks to unregister
+    if (body && body.type === "unregister" && body.wa_id) {
+      unregisterConnection(body.wa_id);
+      try { ws.send(JSON.stringify({ type: "unregistered", wa_id: body.wa_id })); } catch (e) {}
+      return;
+    }
+
+    // Normalize WS payload (accept direct message shape or webhook shape)
     const normalized = (body && body.from) ? {
       channel: body.channel || "whatsapp",
       user: { wa_id: body.from, name: body.name },
@@ -76,10 +89,15 @@ wss.on("connection", (ws) => {
     const fakeReq = { body: normalized };
     const fakeRes = buildFakeResForSocket(ws);
     try {
+      // If handleBotMessage returns a reply via fakeRes.json it will be sent to the same ws by buildFakeResForSocket
       await handleBotMessage(fakeReq, fakeRes);
     } catch (e) {
       try { ws.send(JSON.stringify({ error: "internal_error" })); } catch (err) {}
     }
+  });
+
+  ws.on("close", () => {
+    try { unregisterByWs(ws); } catch (e) {}
   });
 });
 
