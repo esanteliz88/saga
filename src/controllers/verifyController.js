@@ -8,51 +8,73 @@ export function verifyToken(req, res) {
 
 import { handleBotMessage } from "./botController.js";
 
-export function verifyMessage(req, res) {
+export async function verifyMessage(req, res) {
     try {
         const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
         console.log(msg || req.body);
 
-        if (msg) {
-            // Build internal payload expected by handleBotMessage
-            const text = GetTextUser(msg) || (msg.text && msg.text.body) || "";
-            const attachments = [];
-            if (msg.image && (msg.image.link || msg.image.url)) attachments.push({ url: msg.image.link || msg.image.url });
-            if (msg.document && (msg.document.link || msg.document.url)) attachments.push({ url: msg.document.link || msg.document.url, filename: msg.document.filename });
-            if (msg.video && (msg.video.link || msg.video.url)) attachments.push({ url: msg.video.link || msg.video.url });
-            if (msg.audio && (msg.audio.link || msg.audio.url)) attachments.push({ url: msg.audio.link || msg.audio.url });
-
-            const transformed = {
-                channel: "whatsapp",
-                user: { wa_id: msg.from || msg.from_number || msg.sender || "" },
-                message: {
-                    id: msg.id || msg.message_id,
-                    text,
-                    type: msg.type || (msg.text ? "text" : "unknown"),
-                    attachments
-                },
-                formCode: undefined
-            };
-
-            // Call handleBotMessage asynchronously but respond to Facebook immediately
-            try {
-                const fakeReq = { body: transformed };
-                const dummyRes = { json: () => {}, status: () => ({ json: () => {} }), send: () => {} };
-                setImmediate(() => {
-                    try {
-                        // handleBotMessage is async; call and ignore result
-                        // eslint-disable-next-line no-void
-                        void handleBotMessage(fakeReq, dummyRes);
-                    } catch (e) {
-                        console.error("handleBotMessage error:", e);
-                    }
-                });
-            } catch (e) {
-                console.error("Failed to dispatch to handleBotMessage", e);
-            }
+        if (!msg) {
+            // Nothing to process
+            return res.send("EVENT_RECEIVED");
         }
 
-        // Facebook expects a quick 200 with body EVENT_RECEIVED
+        // Build internal payload expected by handleBotMessage
+        const text = GetTextUser(msg) || (msg.text && msg.text.body) || "";
+        const attachments = [];
+        if (msg.image && (msg.image.link || msg.image.url)) attachments.push({ url: msg.image.link || msg.image.url });
+        if (msg.document && (msg.document.link || msg.document.url)) attachments.push({ url: msg.document.link || msg.document.url, filename: msg.document.filename });
+        if (msg.video && (msg.video.link || msg.video.url)) attachments.push({ url: msg.video.link || msg.video.url });
+        if (msg.audio && (msg.audio.link || msg.audio.url)) attachments.push({ url: msg.audio.link || msg.audio.url });
+
+        const transformed = {
+            channel: "whatsapp",
+            user: { wa_id: msg.from || msg.from_number || msg.sender || "" },
+            message: {
+                id: msg.id || msg.message_id,
+                text,
+                type: msg.type || (msg.text ? "text" : "unknown"),
+                attachments
+            },
+            formCode: undefined
+        };
+
+        // If caller requests the reply (WS proxy), capture handleBotMessage output and return it.
+        const wantReply = req.query?.returnReply === "true" || req.headers["x-return-reply"] === "1" || req.headers["x-return-reply"] === "true";
+
+        const fakeReq = { body: transformed };
+
+        if (wantReply) {
+            // Capture response body from handleBotMessage
+            let captured = null;
+            const fakeRes = {
+                json: (obj) => { captured = obj; },
+                status: (_code) => ({ json: (obj) => { captured = obj; } }),
+                send: (v) => { captured = typeof v === "string" ? { text: v } : v; }
+            };
+            try {
+                await handleBotMessage(fakeReq, fakeRes);
+            } catch (e) {
+                console.error("handleBotMessage error:", e);
+            }
+            // If we captured something, return it; otherwise still reply EVENT_RECEIVED
+            if (captured) return res.json(captured);
+            return res.send("EVENT_RECEIVED");
+        }
+
+        // Default: dispatch asynchronously and return EVENT_RECEIVED immediately (Facebook webhook behavior)
+        try {
+            const dummyRes = { json: () => {}, status: () => ({ json: () => {} }), send: () => {} };
+            setImmediate(() => {
+                try {
+                    void handleBotMessage(fakeReq, dummyRes);
+                } catch (e) {
+                    console.error("handleBotMessage error:", e);
+                }
+            });
+        } catch (e) {
+            console.error("Failed to dispatch to handleBotMessage", e);
+        }
+
         return res.send("EVENT_RECEIVED");
     } catch (e) {
         console.log(e);

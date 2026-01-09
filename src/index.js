@@ -6,6 +6,9 @@ import { loadEnv } from "./config/env.js";
 import { connectDb } from "./config/db.js";
 import { botRouter } from "./routes/botRoutes.js";
 import { logger } from "./utils/logger.js";
+import http from "http";
+import { WebSocketServer } from "ws";
+import { handleBotMessage } from "./controllers/botController.js";
 
 loadEnv();
 await connectDb();
@@ -24,6 +27,62 @@ app.get("/health", (_req, res) => {
 
 app.use("/bot", botRouter);
 
+// Create HTTP server and attach WebSocket server to allow WS-based testing
+const server = http.createServer(app);
+
+const wss = new WebSocketServer({ server, path: "/ws" });
+
+function buildFakeResForSocket(ws) {
+  return {
+    json: (obj) => {
+      try {
+        ws.send(JSON.stringify({ type: "reply", payload: obj }));
+      } catch (e) {
+        // ignore send errors
+      }
+    },
+    status: (code) => ({ json: (obj) => { try { ws.send(JSON.stringify({ type: "reply", status: code, payload: obj })); } catch (e) {} } }),
+    send: (v) => { try { ws.send(typeof v === "string" ? v : JSON.stringify(v)); } catch (e) {} }
+  };
+}
+
+// Expect incoming messages as JSON similar to your WS sample. We normalize and call handleBotMessage
+wss.on("connection", (ws) => {
+  ws.on("message", async (data) => {
+    let body = null;
+    try {
+      body = typeof data === "string" ? JSON.parse(data) : JSON.parse(data.toString());
+    } catch (e) {
+      // if not JSON, ignore
+      return ws.send(JSON.stringify({ error: "invalid_json" }));
+    }
+
+    // Normalize WS payload (accept both direct message shape and Graph-like)
+    const normalized = (body && body.from) ? {
+      channel: body.channel || "whatsapp",
+      user: { wa_id: body.from, name: body.name },
+      message: { id: body.id, text: (body.text && (body.text.body || body.text)) || "", type: body.type || "text", attachments: body.attachments || [] },
+      formCode: body.formCode
+    } : (body && body.entry) ? (function() {
+      const msg = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0] || {};
+      const text = (msg.text && msg.text.body) || (msg.interactive && ((msg.interactive.button_reply && msg.interactive.button_reply.title) || (msg.interactive.list_reply && msg.interactive.list_reply.title))) || "";
+      const atts = [];
+      if (msg.image && (msg.image.link || msg.image.url)) atts.push({ url: msg.image.link || msg.image.url });
+      if (msg.document && (msg.document.link || msg.document.url)) atts.push({ url: msg.document.link || msg.document.url });
+      if (msg.video && (msg.video.link || msg.video.url)) atts.push({ url: msg.video.link || msg.video.url });
+      return { channel: "whatsapp", user: { wa_id: msg.from || msg.from_number || msg.sender || "" }, message: { id: msg.id || msg.message_id, text, type: msg.type || "text", attachments: atts }, formCode: undefined };
+    })() : body;
+
+    const fakeReq = { body: normalized };
+    const fakeRes = buildFakeResForSocket(ws);
+    try {
+      await handleBotMessage(fakeReq, fakeRes);
+    } catch (e) {
+      try { ws.send(JSON.stringify({ error: "internal_error" })); } catch (err) {}
+    }
+  });
+});
+
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   logger.error({ err }, "Unhandled error");
@@ -31,4 +90,4 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => logger.info({ port }, "Server started"));
+server.listen(port, () => logger.info({ port }, "Server + WS started"));
