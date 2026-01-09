@@ -1,34 +1,48 @@
 import fetch from "node-fetch";
 import { logger } from "../utils/logger.js";
 
-const PHONE_ID = process.env.FB_PHONE_ID || process.env.FB_PHONE_NUMBER_ID || "847112945162261";
-const TOKEN = process.env.FB_TOKEN || process.env.FB_AUTH_TOKEN || process.env.FB_BEARER_TOKEN || "EAATOVRPZCGU8BQaz319H8wqxZCAJprU97Q1wv3kmUb2H6mSU68K1KcBPxSkblAw3fpvaemsFo9TkiULzNXmzRiVo2Y9a7ZCXxWgCiyIRYU39ZCCa3xYSiUtbDdWXmkwq2vMsrTmvGRbtOrRaa2TCwvxgHx464iz4ePw0wmiZBxIpG0lY17s2toE3V0rbeCgZDZD";
-const ENABLE = (process.env.FB_SEND_ENABLED || "false").toLowerCase() === "true";
+const DEFAULT_PHONE_ID = "847112945162261";
 
-function endpoint() {
-  if (!PHONE_ID) return null;
-  return `https://graph.facebook.com/v22.0/${PHONE_ID}/messages`;
+function getPhoneId() {
+  return process.env.FB_PHONE_ID || process.env.FB_PHONE_NUMBER_ID || DEFAULT_PHONE_ID;
+}
+
+function getToken() {
+  return process.env.FB_TOKEN || process.env.FB_AUTH_TOKEN || process.env.FB_BEARER_TOKEN || "";
+}
+
+function isSendEnabled() {
+  return true;
+}
+
+function endpoint(phoneId) {
+  if (!phoneId) return null;
+  return `https://graph.facebook.com/v22.0/${phoneId}/messages`;
 }
 
 export async function sendWhatsAppMessage(to, event) {
+  const enabled = isSendEnabled();
+  const phoneId = getPhoneId();
+  const token = getToken();
   logger.info({
     msg: "FB_SEND_ATTEMPT",
-    enabled: ENABLE,
-    phoneId: PHONE_ID ? "set" : "missing",
-    token: TOKEN ? "set" : "missing",
+    enabled,
+    sendEnabledRaw: process.env.FB_SEND_ENABLED,
+    phoneId: phoneId ? "set" : "missing",
+    token: token ? "set" : "missing",
     to,
     event,
   });
-  if (!ENABLE) {
+  if (!enabled) {
     logger.info({ msg: "FB_SEND_SKIPPED", reason: "disabled" });
     return { ok: false, reason: "fb_send_disabled" };
   }
-  const url = endpoint();
+  const url = endpoint(phoneId);
   if (!url) {
     logger.warn({ msg: "FB_NO_PHONE_ID" });
     return { ok: false, reason: "no_phone_id" };
   }
-  if (!TOKEN) {
+  if (!token) {
     logger.warn({ msg: "FB_NO_TOKEN" });
     return { ok: false, reason: "no_token" };
   }
@@ -79,7 +93,7 @@ export async function sendWhatsAppMessage(to, event) {
     logger.info({ msg: "FB_SEND_HTTP", to, url, payload: body });
     const resp = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${TOKEN}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
     });
     if (!resp.ok) {
@@ -88,7 +102,7 @@ export async function sendWhatsAppMessage(to, event) {
       return { ok: false, status: resp.status, text: txt };
     }
     const data = await resp.json().catch(() => ({}));
-    logger.info({ msg: "FB_SEND_OK", to });
+    logger.info({ msg: "FB_SEND_OK", to, status: resp.status });
     return { ok: true, data };
   } catch (err) {
     logger.error({ msg: "FB_SEND_ERROR", err: err?.message, to });
