@@ -201,6 +201,7 @@ console.log("Received bot message");
     return res.json({ reply: { ...out, meta: meta(session, formCode) }, actions: [] });
   }
   if (command === "FORM_WS" || command === "START_FORM") {
+    await restartSession(session);
     const consent = renderConsentPrompt(session.name);
     session.status = "AWAITING_CONSENT";
     session.consentPrompted = true;
@@ -300,7 +301,11 @@ console.log("Received bot message");
       session.status = "IN_PROGRESS";
       session.currentQid = undefined;
       await session.save();
-      const { question, block } = resolveCurrentQuestion(form, session);
+      let { question, block } = resolveCurrentQuestion(form, session);
+      if (!question && (form.questions || []).length) {
+        await restartSession(session);
+        ({ question, block } = resolveCurrentQuestion(form, session));
+      }
       const intro = block ? renderBlockIntro(block) : null;
       const out = question ? renderQuestion(question) : {
         text: "No hay preguntas configuradas. Si prefieres, usa el formulario web o reinicia con 'reiniciar'.",

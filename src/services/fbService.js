@@ -31,6 +31,8 @@ export async function sendWhatsAppMessage(to, event) {
   const enabled = isSendEnabled();
   const phoneId = getPhoneId();
   const token = getToken();
+  const eventType = event?.type || (event?.buttons && event.buttons.length ? "interactive" : "text");
+  const buttonsCount = event?.buttons ? event.buttons.length : 0;
   logger.info({
     msg: "FB_SEND_ATTEMPT",
     enabled,
@@ -38,7 +40,8 @@ export async function sendWhatsAppMessage(to, event) {
     phoneId: phoneId ? "set" : "missing",
     token: token ? "set" : "missing",
     to,
-    event,
+    type: eventType,
+    buttons: buttonsCount,
   });
   if (!enabled) {
     logger.info({ msg: "FB_SEND_SKIPPED", reason: "disabled" });
@@ -106,7 +109,13 @@ export async function sendWhatsAppMessage(to, event) {
   }
 
   try {
-    logger.info({ msg: "FB_SEND_HTTP", to, url, payload: body });
+    const payloadInfo = {
+      type: body.type,
+      buttons: body.type === "interactive"
+        ? ((body.interactive?.action?.buttons || body.interactive?.action?.sections?.[0]?.rows || []).length)
+        : 0
+    };
+    logger.info({ msg: "FB_SEND_HTTP", to, url, payload: payloadInfo });
     const resp = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
