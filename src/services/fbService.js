@@ -20,6 +20,13 @@ function endpoint(phoneId) {
   return `https://graph.facebook.com/v22.0/${phoneId}/messages`;
 }
 
+function sanitizeTitle(value, maxLen) {
+  const raw = value == null ? "" : String(value);
+  const cleaned = raw.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned.length > maxLen ? cleaned.slice(0, maxLen) : cleaned;
+}
+
 export async function sendWhatsAppMessage(to, event) {
   const enabled = isSendEnabled();
   const phoneId = getPhoneId();
@@ -55,25 +62,34 @@ export async function sendWhatsAppMessage(to, event) {
     body.text = { preview_url: false, body: event.text || String(event) };
   } else if (event.type === "interactive" || (event.buttons && event.buttons.length)) {
     const allButtons = event.buttons || [];
-    if (allButtons.length <= 3) {
+    const buttonTitles = allButtons.map((b) => sanitizeTitle(b.label ?? b.title ?? b, 20));
+    const hasLongTitle = buttonTitles.some((t) => t.length > 20 || t.length === 0);
+    if (allButtons.length <= 3 && !hasLongTitle) {
       body.type = "interactive";
       const buttons = allButtons.map((b, idx) => ({
         type: "reply",
-        reply: { id: String(b.value ?? b.id ?? idx), title: String(b.label ?? b.title ?? b) }
+        reply: { id: String(b.value ?? b.id ?? idx), title: sanitizeTitle(b.label ?? b.title ?? b, 20) || `Opcion ${idx + 1}` }
       }));
       body.interactive = { type: "button", body: { text: event.text || "" }, action: { buttons } };
     } else {
       body.type = "interactive";
-      const rows = allButtons.slice(0, 10).map((b, idx) => ({
+      const rows = allButtons.map((b, idx) => ({
         id: String(b.value ?? b.id ?? idx),
-        title: String(b.label ?? b.title ?? b)
+        title: sanitizeTitle(b.label ?? b.title ?? b, 24) || `Opcion ${idx + 1}`
       }));
+      const sections = [];
+      for (let i = 0; i < rows.length; i += 10) {
+        sections.push({
+          title: `Opciones ${i + 1}-${Math.min(i + 10, rows.length)}`,
+          rows: rows.slice(i, i + 10)
+        });
+      }
       body.interactive = {
         type: "list",
         body: { text: event.text || "" },
         action: {
           button: "Ver opciones",
-          sections: [{ title: "Opciones", rows }]
+          sections
         }
       };
     }
